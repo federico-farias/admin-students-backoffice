@@ -21,8 +21,7 @@ import {
   People as PeopleIcon,
   Payment as PaymentIcon,
   School as SchoolIcon,
-  Groups as GroupsIcon,
-  Search as SearchIcon
+  Groups as GroupsIcon
 } from '@mui/icons-material';
 import { useNavigate, useLocation } from 'react-router-dom';
 
@@ -53,11 +52,6 @@ const navItems: NavItem[] = [
     text: 'Grupos',
     icon: <GroupsIcon />,
     path: '/groups'
-  },
-  {
-    text: 'Búsqueda de Grupos',
-    icon: <SearchIcon />,
-    path: '/groups-search'
   },
   {
     text: 'Pagos',

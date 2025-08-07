@@ -108,7 +108,7 @@ export const groupsApi = {
     }
     
     const response = await apiClient.get<Group[]>('/groups');
-    return normalizeGroupsArray(response.data);
+    return response.data.map(fromBackendFormat);
   },
   
   async getById(id: string): Promise<Group | undefined> {
@@ -133,7 +133,7 @@ export const groupsApi = {
       await delay(300);
       const newGroup: Group = {
         ...group,
-        id: (mockGroups.length + 1).toString(),
+        id: (groupIdCounter++).toString(),
         studentsCount: 0
       };
       mockGroups.push(newGroup);
@@ -141,14 +141,9 @@ export const groupsApi = {
     }
     
     // Preparar datos para el backend (convertir a mayúsculas)
-    const groupForBackend = {
-      ...group,
-      academicLevel: group.academicLevel.toUpperCase(),
-      grade: group.grade.toUpperCase(),
-      name: group.name.toUpperCase()
-    };
+    const groupForBackend = toBackendFormat(group);
     const response = await apiClient.post<Group>('/groups', groupForBackend);
-    return response.data;
+    return fromBackendFormat(response.data);
   },
   
   async update(id: string, group: Partial<Group>): Promise<Group | undefined> {
@@ -162,14 +157,9 @@ export const groupsApi = {
     
     try {
       // Preparar datos para el backend (convertir a mayúsculas)
-      const groupForBackend = {
-        ...group,
-        academicLevel: group.academicLevel?.toUpperCase(),
-        grade: group.grade?.toUpperCase(),
-        name: group.name?.toUpperCase()
-      };
+      const groupForBackend = toBackendFormat(group);
       const response = await apiClient.put<Group>(`/groups/${id}`, groupForBackend);
-      return response.data;
+      return fromBackendFormat(response.data);
     } catch (error) {
       if (axios.isAxiosError(error) && error.response?.status === 404) {
         return undefined;
@@ -378,7 +368,7 @@ const filterMockGroups = (filters: GroupFilters, pagination: PaginationParams): 
 };
 
 // Función auxiliar para convertir datos a formato backend
-const toBackendFormat = (group: Omit<Group, 'id'>): any => {
+const toBackendFormat = (group: any): any => {
   return {
     ...group,
     academicLevel: group.academicLevel.toUpperCase()

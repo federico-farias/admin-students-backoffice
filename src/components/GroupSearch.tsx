@@ -43,6 +43,7 @@ import {
   type PaginationParams,
   type PaginatedResponse
 } from '../services/groupsApi';
+import { capitalizeText } from '../utils/formatters';
 
 interface GroupSearchProps {
   onGroupSelect?: (group: Group) => void;
@@ -351,14 +352,14 @@ export const GroupSearch: React.FC<GroupSearchProps> = ({
               ) : (
                 data?.content.map((group) => (
                   <TableRow key={group.id} hover>
-                    <TableCell className="capitalize">
-                      {group.academicLevel}
+                    <TableCell>
+                      {capitalizeText(group.academicLevel)}
                     </TableCell>
-                    <TableCell className="capitalize">
-                      {group.grade}
+                    <TableCell>
+                      {capitalizeText(group.grade)}
                     </TableCell>
-                    <TableCell className="capitalize">
-                      {group.name}
+                    <TableCell>
+                      {capitalizeText(group.name)}
                     </TableCell>
                     <TableCell>{group.academicYear}</TableCell>
                     <TableCell align="center">

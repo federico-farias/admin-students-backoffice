@@ -2,9 +2,6 @@ import React, { useState } from 'react';
 import {
   Box,
   Typography,
-  Paper,
-  Tabs,
-  Tab,
   Dialog,
   DialogTitle,
   DialogContent,
@@ -12,81 +9,81 @@ import {
   Button,
   Alert
 } from '@mui/material';
-import {
-  Search as SearchIcon,
-  List as ListIcon
-} from '@mui/icons-material';
 import { GroupSearch } from '../components/GroupSearch';
-import { Groups as GroupsList } from './Groups';
+import { GroupFormDialog } from '../components/GroupFormDialog';
 import type { Group } from '../types/group';
-
-interface TabPanelProps {
-  children?: React.ReactNode;
-  index: number;
-  value: number;
-}
-
-function TabPanel(props: TabPanelProps) {
-  const { children, value, index, ...other } = props;
-
-  return (
-    <div
-      role="tabpanel"
-      hidden={value !== index}
-      id={`simple-tabpanel-${index}`}
-      aria-labelledby={`simple-tab-${index}`}
-      {...other}
-    >
-      {value === index && (
-        <Box sx={{ p: 3 }}>
-          {children}
-        </Box>
-      )}
-    </div>
-  );
-}
+import { groupsApi } from '../services/groupsApi';
 
 export const GroupsManagement: React.FC = () => {
-  const [tabValue, setTabValue] = useState(0);
   const [selectedGroup, setSelectedGroup] = useState<Group | null>(null);
-  const [dialogOpen, setDialogOpen] = useState(false);
-  const [dialogType, setDialogType] = useState<'view' | 'edit' | 'delete' | 'create'>('view');
+  const [formDialogOpen, setFormDialogOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [formMode, setFormMode] = useState<'view' | 'edit' | 'create'>('view');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string>('');
+  const [refreshKey, setRefreshKey] = useState(0);
 
-  const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
-    setTabValue(newValue);
+  const handleRefresh = () => {
+    setRefreshKey(prev => prev + 1);
   };
 
   const handleGroupView = (group: Group) => {
     setSelectedGroup(group);
-    setDialogType('view');
-    setDialogOpen(true);
+    setFormMode('view');
+    setFormDialogOpen(true);
   };
 
   const handleGroupEdit = (group: Group) => {
     setSelectedGroup(group);
-    setDialogType('edit');
-    setDialogOpen(true);
+    setFormMode('edit');
+    setFormDialogOpen(true);
   };
 
   const handleGroupDelete = (group: Group) => {
     setSelectedGroup(group);
-    setDialogType('delete');
-    setDialogOpen(true);
+    setDeleteDialogOpen(true);
   };
 
   const handleCreateGroup = () => {
     setSelectedGroup(null);
-    setDialogType('create');
-    setDialogOpen(true);
+    setFormMode('create');
+    setFormDialogOpen(true);
   };
 
-  const handleCloseDialog = () => {
-    setDialogOpen(false);
+  const handleCloseFormDialog = () => {
+    setFormDialogOpen(false);
     setSelectedGroup(null);
+    setError('');
+  };
+
+  const handleCloseDeleteDialog = () => {
+    setDeleteDialogOpen(false);
+    setSelectedGroup(null);
+    setError('');
+  };
+
+  const handleFormSuccess = () => {
+    handleRefresh();
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!selectedGroup) return;
+
+    try {
+      setLoading(true);
+      setError('');
+      await groupsApi.delete(selectedGroup.id);
+      handleCloseDeleteDialog();
+      handleRefresh();
+    } catch (err) {
+      setError('Error al eliminar el grupo');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
-    <Box>
+    <Box sx={{ padding: 3 }}>
       <Box mb={3}>
         <Typography variant="h4" component="h1" gutterBottom>
           Gestión de Grupos
@@ -96,95 +93,62 @@ export const GroupsManagement: React.FC = () => {
         </Typography>
       </Box>
 
-      <Paper sx={{ width: '100%' }}>
-        <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
-          <Tabs value={tabValue} onChange={handleTabChange} aria-label="Gestión de grupos">
-            <Tab 
-              label="Búsqueda Avanzada" 
-              icon={<SearchIcon />} 
-              iconPosition="start"
-              id="tab-0"
-              aria-controls="simple-tabpanel-0"
-            />
-            <Tab 
-              label="Lista Completa" 
-              icon={<ListIcon />} 
-              iconPosition="start"
-              id="tab-1"
-              aria-controls="simple-tabpanel-1"
-            />
-          </Tabs>
-        </Box>
-        <TabPanel value={tabValue} index={0}>
-          <GroupSearch 
-            onGroupView={handleGroupView}
-            onGroupEdit={handleGroupEdit}
-            onGroupDelete={handleGroupDelete}
-            onCreateGroup={handleCreateGroup}
-            showManagementActions={true}
-            showCreateButton={true}
-          />
-        </TabPanel>
-        <TabPanel value={tabValue} index={1}>
-          <GroupsList />
-        </TabPanel>
-      </Paper>
+      <GroupSearch 
+        key={refreshKey}
+        onGroupView={handleGroupView}
+        onGroupEdit={handleGroupEdit}
+        onGroupDelete={handleGroupDelete}
+        onCreateGroup={handleCreateGroup}
+        showManagementActions={true}
+        showCreateButton={true}
+      />
 
-      {/* Simple Dialog para mostrar info del grupo */}
+      {/* Formulario para crear/editar/ver grupos */}
+      <GroupFormDialog
+        open={formDialogOpen}
+        onClose={handleCloseFormDialog}
+        onSuccess={handleFormSuccess}
+        group={selectedGroup}
+        mode={formMode}
+      />
+
+      {/* Diálogo de confirmación para eliminar */}
       <Dialog 
-        open={dialogOpen} 
-        onClose={handleCloseDialog}
-        maxWidth="md"
+        open={deleteDialogOpen} 
+        onClose={handleCloseDeleteDialog}
+        maxWidth="sm"
         fullWidth
       >
-        <DialogTitle>
-          {dialogType === 'view' && 'Detalles del Grupo'}
-          {dialogType === 'edit' && 'Editar Grupo'}
-          {dialogType === 'delete' && 'Eliminar Grupo'}
-          {dialogType === 'create' && 'Crear Nuevo Grupo'}
-        </DialogTitle>
+        <DialogTitle>Eliminar Grupo</DialogTitle>
         <DialogContent>
-          {selectedGroup ? (
+          {error && (
+            <Alert severity="error" sx={{ mb: 2 }}>
+              {error}
+            </Alert>
+          )}
+          {selectedGroup && (
             <Box>
-              <Typography><strong>ID:</strong> {selectedGroup.id}</Typography>
-              <Typography><strong>Nivel Académico:</strong> {selectedGroup.academicLevel}</Typography>
-              <Typography><strong>Grado:</strong> {selectedGroup.grade}</Typography>
-              <Typography><strong>Nombre:</strong> {selectedGroup.name}</Typography>
-              <Typography><strong>Año Académico:</strong> {selectedGroup.academicYear}</Typography>
-              <Typography><strong>Estudiantes:</strong> {selectedGroup.studentsCount}/{selectedGroup.maxStudents}</Typography>
-              <Typography><strong>Estado:</strong> {selectedGroup.isActive ? 'Activo' : 'Inactivo'}</Typography>
-              
-              {dialogType === 'delete' && (
-                <Alert severity="warning" sx={{ mt: 2 }}>
-                  ¿Estás seguro de que quieres eliminar este grupo? Esta acción no se puede deshacer.
-                </Alert>
-              )}
+              <Typography>
+                ¿Estás seguro de que quieres eliminar el grupo <strong>{selectedGroup.academicLevel} {selectedGroup.grade} - {selectedGroup.name}</strong>?
+              </Typography>
+              <Alert severity="warning" sx={{ mt: 2 }}>
+                Esta acción no se puede deshacer. Todos los datos relacionados con este grupo se perderán.
+              </Alert>
             </Box>
-          ) : (
-            <Typography>
-              {dialogType === 'create' && 'Aquí irá el formulario para crear un nuevo grupo.'}
-            </Typography>
           )}
         </DialogContent>
         <DialogActions>
-          <Button onClick={handleCloseDialog}>
-            {dialogType === 'delete' ? 'Cancelar' : 'Cerrar'}
+          <Button onClick={handleCloseDeleteDialog} disabled={loading}>
+            Cancelar
           </Button>
-          {dialogType === 'delete' && (
-            <Button color="error" variant="contained">
-              Eliminar
-            </Button>
-          )}
-          {dialogType === 'edit' && (
-            <Button color="primary" variant="contained">
-              Guardar
-            </Button>
-          )}
-          {dialogType === 'create' && (
-            <Button color="primary" variant="contained">
-              Crear
-            </Button>
-          )}
+          <Button 
+            onClick={handleConfirmDelete} 
+            color="error" 
+            variant="contained"
+            disabled={loading}
+          >
+            {loading ? 'Eliminando...' : 'Eliminar'}
+          </Button>
         </DialogActions>
       </Dialog>
     </Box>

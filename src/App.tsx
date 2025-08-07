@@ -5,7 +5,6 @@ import { CssBaseline } from '@mui/material';
 import { Layout } from './components/Layout';
 import { Dashboard } from './pages/Dashboard';
 import { Students } from './pages/Students';
-import { Groups } from './pages/Groups';
 import { GroupsManagement } from './pages/GroupsManagement';
 import { Payments } from './pages/Payments';
 
@@ -33,8 +32,7 @@ function App() {
           <Routes>
             <Route path="/" element={<Dashboard />} />
             <Route path="/students" element={<Students />} />
-            <Route path="/groups" element={<Groups />} />
-            <Route path="/groups-search" element={<GroupsManagement />} />
+            <Route path="/groups" element={<GroupsManagement />} />
             <Route path="/payments" element={<Payments />} />
           </Routes>
         </Layout>
