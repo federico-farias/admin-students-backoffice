@@ -1,4 +1,17 @@
+import axios from 'axios';
 import type { Student, Payment, DashboardStats, Grade } from '../types';
+
+// Configuración del cliente HTTP
+const apiClient = axios.create({
+  baseURL: '/api', // Usa el proxy configurado en vite.config.ts
+  timeout: 10000,
+  headers: {
+    'Content-Type': 'application/json',
+  },
+});
+
+// Flag para alternar entre mock y API real
+const USE_MOCK = import.meta.env.VITE_USE_MOCK === 'true' || true; // Cambia a false para usar API real
 
 // Mock data para desarrollo
 const mockStudents: Student[] = [
@@ -96,107 +109,188 @@ const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 // Students API
 export const studentsApi = {
   async getAll(): Promise<Student[]> {
-    await delay(500);
-    return [...mockStudents];
+    if (USE_MOCK) {
+      await delay(500);
+      return [...mockStudents];
+    }
+    
+    const response = await apiClient.get<Student[]>('/students');
+    return response.data;
   },
 
-  async getById(id: string): Promise<Student | null> {
-    await delay(300);
-    return mockStudents.find(student => student.id === id) || null;
+  async getById(id: string): Promise<Student | undefined> {
+    if (USE_MOCK) {
+      await delay(300);
+      return mockStudents.find(s => s.id === id);
+    }
+    
+    try {
+      const response = await apiClient.get<Student>(`/students/${id}`);
+      return response.data;
+    } catch (error) {
+      if (axios.isAxiosError(error) && error.response?.status === 404) {
+        return undefined;
+      }
+      throw error;
+    }
   },
 
   async create(student: Omit<Student, 'id'>): Promise<Student> {
-    await delay(500);
-    const newStudent: Student = {
-      ...student,
-      id: (mockStudents.length + 1).toString()
-    };
-    mockStudents.push(newStudent);
-    return newStudent;
+    if (USE_MOCK) {
+      await delay(500);
+      const newStudent: Student = {
+        ...student,
+        id: (mockStudents.length + 1).toString()
+      };
+      mockStudents.push(newStudent);
+      return newStudent;
+    }
+    
+    const response = await apiClient.post<Student>('/students', student);
+    return response.data;
   },
 
   async update(id: string, student: Partial<Student>): Promise<Student> {
-    await delay(500);
-    const index = mockStudents.findIndex(s => s.id === id);
-    if (index === -1) throw new Error('Estudiante no encontrado');
+    if (USE_MOCK) {
+      await delay(500);
+      const index = mockStudents.findIndex(s => s.id === id);
+      if (index === -1) throw new Error('Estudiante no encontrado');
+      
+      mockStudents[index] = { ...mockStudents[index], ...student };
+      return mockStudents[index];
+    }
     
-    mockStudents[index] = { ...mockStudents[index], ...student };
-    return mockStudents[index];
+    const response = await apiClient.put<Student>(`/students/${id}`, student);
+    return response.data;
   },
 
   async delete(id: string): Promise<void> {
-    await delay(500);
-    const index = mockStudents.findIndex(s => s.id === id);
-    if (index === -1) throw new Error('Estudiante no encontrado');
+    if (USE_MOCK) {
+      await delay(500);
+      const index = mockStudents.findIndex(s => s.id === id);
+      if (index === -1) throw new Error('Estudiante no encontrado');
+      
+      mockStudents.splice(index, 1);
+      return;
+    }
     
-    mockStudents.splice(index, 1);
+    await apiClient.delete(`/students/${id}`);
+  },
+
+  async search(query: string): Promise<Student[]> {
+    if (USE_MOCK) {
+      await delay(300);
+      return mockStudents.filter(s => 
+        s.firstName.toLowerCase().includes(query.toLowerCase()) ||
+        s.lastName.toLowerCase().includes(query.toLowerCase()) ||
+        (s.email && s.email.toLowerCase().includes(query.toLowerCase()))
+      );
+    }
+    
+    const response = await apiClient.get<Student[]>(`/students/search?q=${encodeURIComponent(query)}`);
+    return response.data;
   }
 };
 
 // Payments API
 export const paymentsApi = {
   async getAll(): Promise<Payment[]> {
-    await delay(500);
-    return [...mockPayments];
+    if (USE_MOCK) {
+      await delay(500);
+      return [...mockPayments];
+    }
+    
+    const response = await apiClient.get<Payment[]>('/payments');
+    return response.data;
   },
 
   async getByStudentId(studentId: string): Promise<Payment[]> {
-    await delay(300);
-    return mockPayments.filter(payment => payment.studentId === studentId);
+    if (USE_MOCK) {
+      await delay(300);
+      return mockPayments.filter(p => p.studentId === studentId);
+    }
+    
+    const response = await apiClient.get<Payment[]>(`/payments/student/${studentId}`);
+    return response.data;
   },
 
   async create(payment: Omit<Payment, 'id'>): Promise<Payment> {
-    await delay(500);
-    const newPayment: Payment = {
-      ...payment,
-      id: (mockPayments.length + 1).toString()
-    };
-    mockPayments.push(newPayment);
-    return newPayment;
+    if (USE_MOCK) {
+      await delay(500);
+      const newPayment: Payment = {
+        ...payment,
+        id: (mockPayments.length + 1).toString()
+      };
+      mockPayments.push(newPayment);
+      return newPayment;
+    }
+    
+    const response = await apiClient.post<Payment>('/payments', payment);
+    return response.data;
   },
 
   async update(id: string, payment: Partial<Payment>): Promise<Payment> {
-    await delay(500);
-    const index = mockPayments.findIndex(p => p.id === id);
-    if (index === -1) throw new Error('Pago no encontrado');
+    if (USE_MOCK) {
+      await delay(500);
+      const index = mockPayments.findIndex(p => p.id === id);
+      if (index === -1) throw new Error('Pago no encontrado');
+      
+      mockPayments[index] = { ...mockPayments[index], ...payment };
+      return mockPayments[index];
+    }
     
-    mockPayments[index] = { ...mockPayments[index], ...payment };
-    return mockPayments[index];
+    const response = await apiClient.put<Payment>(`/payments/${id}`, payment);
+    return response.data;
   },
 
   async delete(id: string): Promise<void> {
-    await delay(500);
-    const index = mockPayments.findIndex(p => p.id === id);
-    if (index === -1) throw new Error('Pago no encontrado');
+    if (USE_MOCK) {
+      await delay(500);
+      const index = mockPayments.findIndex(p => p.id === id);
+      if (index === -1) throw new Error('Pago no encontrado');
+      
+      mockPayments.splice(index, 1);
+      return;
+    }
     
-    mockPayments.splice(index, 1);
+    await apiClient.delete(`/payments/${id}`);
   }
 };
 
 // Dashboard API
 export const dashboardApi = {
   async getStats(): Promise<DashboardStats> {
-    await delay(500);
-    const totalStudents = mockStudents.length;
-    const activeStudents = mockStudents.filter(s => s.isActive).length;
-    const paidPayments = mockPayments.filter(p => p.status === 'pagado');
-    const pendingPayments = mockPayments.filter(p => p.status === 'pendiente');
+    if (USE_MOCK) {
+      await delay(500);
+      const totalStudents = mockStudents.length;
+      const activeStudents = mockStudents.filter(s => s.isActive).length;
+      const paidPayments = mockPayments.filter(p => p.status === 'pagado');
+      const pendingPayments = mockPayments.filter(p => p.status === 'pendiente');
+      
+      return {
+        totalStudents,
+        activeStudents,
+        totalPayments: paidPayments.length,
+        pendingPayments: pendingPayments.length,
+        monthlyRevenue: paidPayments.reduce((sum, p) => sum + p.amount, 0),
+        unpaidAmount: pendingPayments.reduce((sum, p) => sum + p.amount, 0)
+      };
+    }
     
-    return {
-      totalStudents,
-      activeStudents,
-      totalPayments: paidPayments.length,
-      pendingPayments: pendingPayments.length,
-      monthlyRevenue: paidPayments.reduce((sum, p) => sum + p.amount, 0),
-      unpaidAmount: pendingPayments.reduce((sum, p) => sum + p.amount, 0)
-    };
+    const response = await apiClient.get<DashboardStats>('/dashboard/stats');
+    return response.data;
   }
 };
 
 // Grades API
 export const gradesApi = {
   async getAll(): Promise<Grade[]> {
-    await delay(300);
-    return [...mockGrades];
+    if (USE_MOCK) {
+      await delay(300);
+      return [...mockGrades];
+    }
+    
+    const response = await apiClient.get<Grade[]>('/grades');
+    return response.data;
   }
 };
