@@ -1,5 +1,6 @@
 import axios from 'axios';
 import type { Group } from '../types/group';
+import { normalizeGroupsArray } from '../utils/formatters';
 
 // Configuración del cliente HTTP
 const apiClient = axios.create({
@@ -15,11 +16,11 @@ const USE_MOCK = import.meta.env.VITE_USE_MOCK === 'true' || false; // Cambia a 
 
 // Mock data para desarrollo
 let mockGroups: Group[] = [
-  { id: '1', academicLevel: 'Maternal', grade: 'Primero', name: 'A', maxStudents: 10, studentsCount: 8 },
-  { id: '2', academicLevel: 'Maternal', grade: 'Segundo', name: 'A', maxStudents: 10, studentsCount: 10 },
-  { id: '3', academicLevel: 'Primaria', grade: 'Primero', name: 'A', maxStudents: 10, studentsCount: 10 },
-  { id: '4', academicLevel: 'Primaria', grade: 'Primero', name: 'B', maxStudents: 10, studentsCount: 2 },
-  { id: '5', academicLevel: 'Secundaria', grade: 'Tercero', name: 'A', maxStudents: 10, studentsCount: 5 }
+  { id: '1', academicLevel: 'Maternal', grade: 'Primero', name: 'A', maxStudents: 10, studentsCount: 8, academicYear: '2024-2025' },
+  { id: '2', academicLevel: 'Maternal', grade: 'Segundo', name: 'A', maxStudents: 10, studentsCount: 10, academicYear: '2024-2025' },
+  { id: '3', academicLevel: 'Primaria', grade: 'Primero', name: 'A', maxStudents: 10, studentsCount: 10, academicYear: '2024-2025' },
+  { id: '4', academicLevel: 'Primaria', grade: 'Primero', name: 'B', maxStudents: 10, studentsCount: 2, academicYear: '2024-2025' },
+  { id: '5', academicLevel: 'Secundaria', grade: 'Tercero', name: 'A', maxStudents: 10, studentsCount: 5, academicYear: '2024-2025' }
 ];
 
 const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
@@ -30,9 +31,9 @@ export const groupsApi = {
       await delay(300);
       return [...mockGroups];
     }
-    console.log('Enviroment variable VITE_USE_MOCK:', USE_MOCK);
+    
     const response = await apiClient.get<Group[]>('/groups');
-    return response.data;
+    return normalizeGroupsArray(response.data);
   },
   
   async getById(id: string): Promise<Group | undefined> {
@@ -64,7 +65,14 @@ export const groupsApi = {
       return newGroup;
     }
     
-    const response = await apiClient.post<Group>('/groups', group);
+    // Preparar datos para el backend (convertir a mayúsculas)
+    const groupForBackend = {
+      ...group,
+      academicLevel: group.academicLevel.toUpperCase(),
+      grade: group.grade.toUpperCase(),
+      name: group.name.toUpperCase()
+    };
+    const response = await apiClient.post<Group>('/groups', groupForBackend);
     return response.data;
   },
   
@@ -78,7 +86,14 @@ export const groupsApi = {
     }
     
     try {
-      const response = await apiClient.put<Group>(`/groups/${id}`, group);
+      // Preparar datos para el backend (convertir a mayúsculas)
+      const groupForBackend = {
+        ...group,
+        academicLevel: group.academicLevel?.toUpperCase(),
+        grade: group.grade?.toUpperCase(),
+        name: group.name?.toUpperCase()
+      };
+      const response = await apiClient.put<Group>(`/groups/${id}`, groupForBackend);
       return response.data;
     } catch (error) {
       if (axios.isAxiosError(error) && error.response?.status === 404) {
@@ -114,7 +129,11 @@ export const groupsApi = {
       return mockGroups.filter(g => g.academicLevel === academicLevel && g.grade === grade);
     }
     
-    const response = await apiClient.get<Group[]>(`/groups/filter?academicLevel=${encodeURIComponent(academicLevel)}&grade=${encodeURIComponent(grade)}`);
+    // Convertir parámetros a mayúsculas para el backend
+    const academicLevelUpper = academicLevel.toUpperCase();
+    const gradeUpper = grade.toUpperCase();
+    
+    const response = await apiClient.get<Group[]>(`/groups/filter?academicLevel=${encodeURIComponent(academicLevelUpper)}&grade=${encodeURIComponent(gradeUpper)}`);
     return response.data;
   },
   
@@ -128,7 +147,11 @@ export const groupsApi = {
       );
     }
     
-    const response = await apiClient.get<Group[]>(`/groups/available?academicLevel=${encodeURIComponent(academicLevel)}&grade=${encodeURIComponent(grade)}`);
+    // Convertir parámetros a mayúsculas para el backend
+    const academicLevelUpper = academicLevel.toUpperCase();
+    const gradeUpper = grade.toUpperCase();
+    
+    const response = await apiClient.get<Group[]>(`/groups/available?academicLevel=${encodeURIComponent(academicLevelUpper)}&grade=${encodeURIComponent(gradeUpper)}`);
     return response.data;
   },
   

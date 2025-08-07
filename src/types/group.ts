@@ -5,4 +5,5 @@ export interface Group {
   name: string; // Ej: 'A', 'B', 'C'
   maxStudents: number;
   studentsCount: number;
+  academicYear: string; // Ej: '2024-2025', '2025-2026'
 }

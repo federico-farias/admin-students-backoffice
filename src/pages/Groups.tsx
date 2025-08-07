@@ -40,6 +40,19 @@ const gradesByLevel: Record<string, string[]> = {
   Secundaria: ['Primero', 'Segundo', 'Tercero']
 };
 
+// Generar años académicos (actual y algunos anteriores/posteriores)
+const generateAcademicYears = () => {
+  const currentYear = new Date().getFullYear();
+  const years = [];
+  for (let i = -2; i <= 2; i++) {
+    const year = currentYear + i;
+    years.push(`${year}-${year + 1}`);
+  }
+  return years;
+};
+
+const academicYears = generateAcademicYears();
+
 export const Groups: React.FC = () => {
   const [groups, setGroups] = useState<Group[]>([]);
   const [loading, setLoading] = useState(false);
@@ -52,7 +65,8 @@ export const Groups: React.FC = () => {
     academicLevel: 'Maternal',
     grade: '',
     name: '',
-    maxStudents: 10
+    maxStudents: 10,
+    academicYear: academicYears[2] // Año actual (índice 2 en el array)
   });
 
   useEffect(() => {
@@ -79,11 +93,12 @@ export const Groups: React.FC = () => {
         academicLevel: group.academicLevel,
         grade: group.grade,
         name: group.name,
-        maxStudents: group.maxStudents
+        maxStudents: group.maxStudents,
+        academicYear: group.academicYear
       });
     } else {
       setEditing(null);
-      setForm({ academicLevel: 'Maternal', grade: '', name: '', maxStudents: 10 });
+      setForm({ academicLevel: 'Maternal', grade: '', name: '', maxStudents: 10, academicYear: academicYears[2] });
     }
     setOpen(true);
   };
@@ -92,7 +107,7 @@ export const Groups: React.FC = () => {
     setOpen(false);
     setEditing(null);
     setError('');
-    setForm({ academicLevel: 'Maternal', grade: '', name: '', maxStudents: 10 });
+    setForm({ academicLevel: 'Maternal', grade: '', name: '', maxStudents: 10, academicYear: academicYears[2] });
   };
 
   const handleChange = (field: keyof typeof form) => (e: any) => {
@@ -105,7 +120,7 @@ export const Groups: React.FC = () => {
       setError('');
       
       // Validaciones
-      if (!form.academicLevel || !form.grade || !form.name) {
+      if (!form.academicLevel || !form.grade || !form.name || !form.academicYear) {
         setError('Todos los campos son obligatorios');
         return;
       }
@@ -120,11 +135,12 @@ export const Groups: React.FC = () => {
         g.academicLevel === form.academicLevel && 
         g.grade === form.grade && 
         g.name.toLowerCase() === form.name.toLowerCase() &&
+        g.academicYear === form.academicYear &&
         (!editing || g.id !== editing.id)
       );
 
       if (existingGroup) {
-        setError(`Ya existe un grupo ${form.name} para ${form.academicLevel} ${form.grade}`);
+        setError(`Ya existe un grupo ${form.name} para ${form.academicLevel} ${form.grade} en el ciclo ${form.academicYear}`);
         return;
       }
 
@@ -205,6 +221,7 @@ export const Groups: React.FC = () => {
       <Table>
         <TableHead>
           <TableRow>
+            <TableCell>Ciclo Escolar</TableCell>
             <TableCell>Nivel</TableCell>
             <TableCell>Grado</TableCell>
             <TableCell>Grupo</TableCell>
@@ -217,8 +234,13 @@ export const Groups: React.FC = () => {
         <TableBody>
           {groups.map(group => (
             <TableRow key={group.id}>
-              <TableCell>{group.academicLevel}</TableCell>
-              <TableCell>{group.grade}</TableCell>
+              <TableCell>
+                <Typography variant="body2" color="primary">
+                  {group.academicYear}
+                </Typography>
+              </TableCell>
+              <TableCell className={'capitalize'}>{group.academicLevel}</TableCell>
+              <TableCell className="capitalize">{group.grade}</TableCell>
               <TableCell>
                 <Typography variant="h6" component="span">
                   {group.name}
@@ -264,7 +286,7 @@ export const Groups: React.FC = () => {
           ))}
           {groups.length === 0 && !loading && (
             <TableRow>
-              <TableCell colSpan={7} align="center">
+              <TableCell colSpan={8} align="center">
                 <Typography variant="body2" color="text.secondary">
                   No hay grupos registrados
                 </Typography>
@@ -284,6 +306,20 @@ export const Groups: React.FC = () => {
             </Alert>
           )}
           
+          <FormControl style={{ margin: '8px 0' }} fullWidth>
+            <InputLabel>Ciclo Escolar</InputLabel>
+            <Select 
+              value={form.academicYear} 
+              label="Ciclo Escolar" 
+              onChange={handleChange('academicYear')}
+              disabled={loading}
+            >
+              {academicYears.map(year => (
+                <MenuItem key={year} value={year}>{year}</MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+          
           <FormControl fullWidth>
             <InputLabel>Nivel Académico</InputLabel>
             <Select 
@@ -293,7 +329,9 @@ export const Groups: React.FC = () => {
               disabled={loading}
             >
               {academicLevels.map(level => (
-                <MenuItem key={level} value={level}>{level}</MenuItem>
+                <MenuItem key={level} value={level} className="capitalize">
+                  {level}
+                </MenuItem>
               ))}
             </Select>
           </FormControl>
@@ -306,7 +344,9 @@ export const Groups: React.FC = () => {
               onChange={handleChange('grade')}
             >
               {(gradesByLevel[form.academicLevel] || []).map(grade => (
-                <MenuItem key={grade} value={grade}>{grade}</MenuItem>
+                <MenuItem key={grade} value={grade} className="capitalize">
+                  {grade}
+                </MenuItem>
               ))}
             </Select>
           </FormControl>
@@ -340,7 +380,7 @@ export const Groups: React.FC = () => {
           <Button 
             onClick={handleSubmit} 
             variant="contained"
-            disabled={loading || !form.academicLevel || !form.grade || !form.name}
+            disabled={loading || !form.academicLevel || !form.grade || !form.name || !form.academicYear}
           >
             {loading ? 'Guardando...' : 'Guardar'}
           </Button>
@@ -364,7 +404,9 @@ export const Groups: React.FC = () => {
               <>
                 ¿Está seguro que desea eliminar el grupo{' '}
                 <strong>
-                  {groupToDelete?.academicLevel} {groupToDelete?.grade} - Grupo {groupToDelete?.name}
+                  <span className="capitalize">{groupToDelete?.academicLevel}</span>{' '}
+                  <span className="capitalize">{groupToDelete?.grade}</span> - Grupo {groupToDelete?.name} 
+                  ({groupToDelete?.academicYear})
                 </strong>?
                 <br />
                 Esta acción no se puede deshacer.

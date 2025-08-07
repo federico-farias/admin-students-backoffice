@@ -65,3 +65,28 @@ export const getFullName = (firstName: string, lastName: string): string => {
 export const getInitials = (firstName: string, lastName: string): string => {
   return `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase();
 };
+
+// Función para normalizar datos de grupos que vienen del backend
+export const normalizeGroupData = (group: any): any => {
+  return {
+    ...group,
+    academicLevel: capitalizeFirstLetter(group.academicLevel || ''),
+    grade: capitalizeFirstLetter(group.grade || ''),
+    name: group.name?.toUpperCase() || ''
+  };
+};
+
+// Función para normalizar arrays de grupos
+export const normalizeGroupsArray = (groups: any[]): any[] => {
+  return groups.map(normalizeGroupData);
+};
+
+// Función para preparar datos de grupo para enviar al backend (convierte a mayúsculas)
+export const prepareGroupForBackend = (group: any): any => {
+  return {
+    ...group,
+    academicLevel: group.academicLevel?.toUpperCase() || '',
+    grade: group.grade?.toUpperCase() || '',
+    name: group.name?.toUpperCase() || ''
+  };
+};
