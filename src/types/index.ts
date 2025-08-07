@@ -11,7 +11,6 @@ export interface Student {
   parentPhone: string;
   parentEmail?: string;
   address: string;
-  enrollmentDate: string;
   isActive: boolean;
   emergencyContact?: {
     name: string;
@@ -67,3 +66,53 @@ export type PaymentFilter = {
   };
   studentId?: string;
 };
+
+export type EnrollmentStatus = 'PENDIENTE' | 'CONFIRMADA' | 'CANCELADA' | 'COMPLETADA';
+
+export interface Enrollment {
+  id: string;
+  publicId: string;
+  studentPublicId: string;
+  studentFullName?: string;
+  groupId: number;
+  groupFullName?: string;
+  enrollmentDate: string;
+  academicYear: string;
+  enrollmentFee: number;
+  status: EnrollmentStatus;
+  notes?: string;
+  isActive: boolean;
+}
+
+export interface EnrollmentFilters {
+  status?: EnrollmentStatus;
+  academicYear?: string;
+  groupId?: number;
+  isActive?: boolean;
+  searchText?: string;
+  studentName?: string;
+  page?: number;
+  limit?: number;
+}
+
+export type EnrollmentFilter = {
+  status?: EnrollmentStatus;
+  academicYear?: string;
+  groupId?: number;
+  isActive?: boolean;
+  searchText?: string;
+  dateRange?: {
+    start: string;
+    end: string;
+  };
+};
+
+export interface PaginatedResponse<T> {
+  content: T[];
+  totalElements: number;
+  totalPages: number;
+  number: number;
+  size: number;
+  first: boolean;
+  last: boolean;
+}

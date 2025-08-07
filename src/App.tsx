@@ -1,10 +1,10 @@
-import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import { CssBaseline } from '@mui/material';
 import { Layout } from './components/Layout';
 import { Dashboard } from './pages/Dashboard';
 import { Students } from './pages/Students';
+import Enrollments from './pages/Enrollments';
 import { GroupsManagement } from './pages/GroupsManagement';
 import { Payments } from './pages/Payments';
 
@@ -32,6 +32,7 @@ function App() {
           <Routes>
             <Route path="/" element={<Dashboard />} />
             <Route path="/students" element={<Students />} />
+            <Route path="/enrollments" element={<Enrollments />} />
             <Route path="/groups" element={<GroupsManagement />} />
             <Route path="/payments" element={<Payments />} />
           </Routes>

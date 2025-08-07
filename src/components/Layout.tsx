@@ -21,7 +21,8 @@ import {
   People as PeopleIcon,
   Payment as PaymentIcon,
   School as SchoolIcon,
-  Groups as GroupsIcon
+  Groups as GroupsIcon,
+  Assignment as AssignmentIcon
 } from '@mui/icons-material';
 import { useNavigate, useLocation } from 'react-router-dom';
 
@@ -47,6 +48,11 @@ const navItems: NavItem[] = [
     text: 'Estudiantes',
     icon: <PeopleIcon />,
     path: '/students'
+  },
+  {
+    text: 'Inscripciones',
+    icon: <AssignmentIcon />,
+    path: '/enrollments'
   },
   {
     text: 'Grupos',
