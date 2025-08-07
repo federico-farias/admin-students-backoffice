@@ -6,17 +6,13 @@ import {
   DialogActions,
   Button,
   TextField,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
   Box,
   Typography,
   Divider,
   Alert
 } from '@mui/material';
-import { gradesApi, studentsApi } from '../services/api';
-import type { Student, Grade } from '../types';
+import { studentsApi } from '../services/api';
+import type { Student } from '../types';
 
 interface StudentFormData {
   firstName: string;
@@ -24,9 +20,6 @@ interface StudentFormData {
   email: string;
   phone: string;
   dateOfBirth: string;
-  academicLevel: string;
-  grade: string;
-  group: string; // antes section
   parentName: string;
   parentPhone: string;
   parentEmail: string;
@@ -51,7 +44,6 @@ export const StudentForm: React.FC<StudentFormProps> = ({
   student,
   mode = 'create'
 }) => {
-  const [grades, setGrades] = useState<Grade[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string>('');
   const [formData, setFormData] = useState<StudentFormData>({
@@ -60,9 +52,6 @@ export const StudentForm: React.FC<StudentFormProps> = ({
     email: '',
     phone: '',
     dateOfBirth: '',
-    academicLevel: '',
-    grade: '',
-    group: '', // antes section
     parentName: '',
     parentPhone: '',
     parentEmail: '',
@@ -74,34 +63,13 @@ export const StudentForm: React.FC<StudentFormProps> = ({
   const [errors, setErrors] = useState<Partial<StudentFormData>>({});
 
   useEffect(() => {
-    const fetchGrades = async () => {
-      try {
-        const data = await gradesApi.getAll();
-        setGrades(data);
-      } catch (error) {
-        console.error('Error fetching grades:', error);
-      }
-    };
-    fetchGrades();
-  }, []);
-
-  useEffect(() => {
     if (student) {
-      // Determinar academicLevel a partir del grade
-      let academicLevel = '';
-      if (student.grade.startsWith('Maternal')) academicLevel = 'Maternal';
-      else if (student.grade.startsWith('Preescolar')) academicLevel = 'Preescolar';
-      else if (student.grade.startsWith('Primaria')) academicLevel = 'Primaria';
-      else if (student.grade.startsWith('Secundaria')) academicLevel = 'Secundaria';
       setFormData({
         firstName: student.firstName,
         lastName: student.lastName,
         email: student.email || '',
         phone: student.phone || '',
         dateOfBirth: student.dateOfBirth,
-        academicLevel,
-        grade: student.grade,
-        group: student.section,
         parentName: student.parentName,
         parentPhone: student.parentPhone,
         parentEmail: student.parentEmail || '',
@@ -117,9 +85,6 @@ export const StudentForm: React.FC<StudentFormProps> = ({
         email: '',
         phone: '',
         dateOfBirth: '',
-        academicLevel: '',
-        grade: '',
-        group: '',
         parentName: '',
         parentPhone: '',
         parentEmail: '',
@@ -138,8 +103,6 @@ export const StudentForm: React.FC<StudentFormProps> = ({
     if (!formData.firstName.trim()) newErrors.firstName = 'El nombre es obligatorio';
     if (!formData.lastName.trim()) newErrors.lastName = 'El apellido es obligatorio';
     if (!formData.dateOfBirth) newErrors.dateOfBirth = 'La fecha de nacimiento es obligatoria';
-    if (!formData.grade) newErrors.grade = 'El grado es obligatorio';
-    if (!formData.group) newErrors.group = 'El grupo es obligatorio';
     if (!formData.parentName.trim()) newErrors.parentName = 'El nombre del padre/tutor es obligatorio';
     if (!formData.parentPhone.trim()) newErrors.parentPhone = 'El teléfono del padre/tutor es obligatorio';
     if (!formData.address.trim()) newErrors.address = 'La dirección es obligatoria';
@@ -169,13 +132,12 @@ export const StudentForm: React.FC<StudentFormProps> = ({
         email: formData.email || undefined,
         phone: formData.phone || undefined,
         dateOfBirth: formData.dateOfBirth,
-        grade: formData.grade,
-        section: formData.group,
+        grade: '', // Campo removido del formulario, valor por defecto
+        section: '', // Campo removido del formulario, valor por defecto
         parentName: formData.parentName.trim(),
         parentPhone: formData.parentPhone.trim(),
         parentEmail: formData.parentEmail || undefined,
         address: formData.address.trim(),
-        enrollmentDate: new Date().toISOString().split('T')[0],
         isActive: true,
         emergencyContact: (formData.emergencyContactName || formData.emergencyContactPhone || formData.emergencyContactRelationship) ? {
           name: formData.emergencyContactName || '',
@@ -215,45 +177,6 @@ export const StudentForm: React.FC<StudentFormProps> = ({
       }));
     }
   };
-
-  // Filtrar grados según el nivel académico seleccionado
-let filteredGrades: Grade[] = [];
-if (formData.academicLevel === 'Maternal') {
-  filteredGrades = [
-    { id: 'maternal-1', name: 'Primero', sections: ['A', 'B'] },
-    { id: 'maternal-2', name: 'Segundo', sections: ['A', 'B'] }
-  ];
-} else if (formData.academicLevel === 'Preescolar') {
-  filteredGrades = [
-    { id: 'preescolar-1', name: 'Primero', sections: ['A', 'B'] },
-    { id: 'preescolar-2', name: 'Segundo', sections: ['A', 'B'] },
-    { id: 'preescolar-3', name: 'Tercero', sections: ['A', 'B'] }
-  ];
-} else if (formData.academicLevel === 'Primaria') {
-  filteredGrades = [
-    { id: 'primaria-1', name: 'Primero', sections: ['A', 'B'] },
-    { id: 'primaria-2', name: 'Segundo', sections: ['A', 'B'] },
-    { id: 'primaria-3', name: 'Tercero', sections: ['A', 'B'] },
-    { id: 'primaria-4', name: 'Cuarto', sections: ['A', 'B'] },
-    { id: 'primaria-5', name: 'Quinto', sections: ['A', 'B'] },
-    { id: 'primaria-6', name: 'Sexto', sections: ['A', 'B'] }
-  ];
-} else if (formData.academicLevel === 'Secundaria') {
-  filteredGrades = [
-    { id: 'secundaria-1', name: 'Primero', sections: ['A', 'B'] },
-    { id: 'secundaria-2', name: 'Segundo', sections: ['A', 'B'] },
-    { id: 'secundaria-3', name: 'Tercero', sections: ['A', 'B'] }
-  ];
-}
-  const selectedGradeData = grades.find(g => g.name === formData.grade);
-  const availableGroups = selectedGradeData?.sections || [];
-
-  // Limpiar grupo si el grado cambia
-  useEffect(() => {
-    if (formData.grade && !availableGroups.includes(formData.group)) {
-      setFormData(prev => ({ ...prev, group: '' }));
-    }
-  }, [formData.grade, availableGroups, formData.group]);
 
   return (
     <Dialog
@@ -335,66 +258,6 @@ if (formData.academicLevel === 'Maternal') {
               error={!!errors.address}
               helperText={errors.address}
             />
-          </Box>
-
-          {/* Información Académica */}
-          <Typography variant="h6" gutterBottom color="primary">
-            Información Académica
-          </Typography>
-          <Box sx={{ display: 'flex', gap: 2, mb: 3, flexWrap: 'wrap' }}>
-            <FormControl sx={{ flex: 1, minWidth: 200 }}>
-              <InputLabel>Nivel Académico</InputLabel>
-              <Select
-                value={formData.academicLevel}
-                label="Nivel Académico"
-                onChange={handleInputChange('academicLevel')}
-              >
-                <MenuItem value="Maternal">Maternal</MenuItem>
-                <MenuItem value="Preescolar">Preescolar</MenuItem>
-                <MenuItem value="Primaria">Primaria</MenuItem>
-                <MenuItem value="Secundaria">Secundaria</MenuItem>
-              </Select>
-            </FormControl>
-            <FormControl sx={{ flex: 1, minWidth: 200 }} error={!!errors.grade}>
-              <InputLabel>Grado</InputLabel>
-              <Select
-                value={formData.grade}
-                label="Grado"
-                onChange={handleInputChange('grade')}
-                disabled={!formData.academicLevel}
-              >
-                {filteredGrades.map((grade) => (
-                  <MenuItem key={grade.id} value={grade.name}>
-                    {grade.name}
-                  </MenuItem>
-                ))}
-              </Select>
-              {errors.grade && (
-                <Typography variant="caption" color="error" sx={{ ml: 2, mt: 0.5 }}>
-                  {errors.grade}
-                </Typography>
-              )}
-            </FormControl>
-            <FormControl sx={{ flex: 1, minWidth: 200 }} error={!!errors.group}>
-              <InputLabel>Grupo</InputLabel>
-              <Select
-                value={formData.group}
-                label="Grupo"
-                onChange={handleInputChange('group')}
-                disabled={!formData.grade}
-              >
-                {availableGroups.map((group) => (
-                  <MenuItem key={group} value={group}>
-                    {group}
-                  </MenuItem>
-                ))}
-              </Select>
-              {errors.group && (
-                <Typography variant="caption" color="error" sx={{ ml: 2, mt: 0.5 }}>
-                  {errors.group}
-                </Typography>
-              )}
-            </FormControl>
           </Box>
 
           <Divider sx={{ my: 2 }} />
