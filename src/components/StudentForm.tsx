@@ -15,8 +15,7 @@ import {
   Divider,
   Alert
 } from '@mui/material';
-import { gradesApi } from '../services/api';
-import { generateId } from '../utils/formatters';
+import { gradesApi, studentsApi } from '../services/api';
 import type { Student, Grade } from '../types';
 
 interface StudentFormData {
@@ -40,19 +39,21 @@ interface StudentFormData {
 interface StudentFormProps {
   open: boolean;
   onClose: () => void;
-  onSubmit: (data: Omit<Student, 'id' | 'enrollmentDate' | 'isActive'>) => Promise<void>;
+  onSuccess?: () => void;
   student?: Student | null;
-  loading?: boolean;
+  mode?: 'create' | 'edit' | 'view';
 }
 
 export const StudentForm: React.FC<StudentFormProps> = ({
   open,
   onClose,
-  onSubmit,
+  onSuccess,
   student,
-  loading = false
+  mode = 'create'
 }) => {
   const [grades, setGrades] = useState<Grade[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string>('');
   const [formData, setFormData] = useState<StudentFormData>({
     firstName: '',
     lastName: '',
@@ -159,7 +160,10 @@ export const StudentForm: React.FC<StudentFormProps> = ({
     if (!validateForm()) return;
 
     try {
-      const studentData: Omit<Student, 'id' | 'enrollmentDate' | 'isActive'> = {
+      setLoading(true);
+      setError('');
+      
+      const studentData: Omit<Student, 'id'> = {
         firstName: formData.firstName.trim(),
         lastName: formData.lastName.trim(),
         email: formData.email || undefined,
@@ -171,6 +175,8 @@ export const StudentForm: React.FC<StudentFormProps> = ({
         parentPhone: formData.parentPhone.trim(),
         parentEmail: formData.parentEmail || undefined,
         address: formData.address.trim(),
+        enrollmentDate: new Date().toISOString().split('T')[0],
+        isActive: true,
         emergencyContact: (formData.emergencyContactName || formData.emergencyContactPhone || formData.emergencyContactRelationship) ? {
           name: formData.emergencyContactName || '',
           phone: formData.emergencyContactPhone || '',
@@ -178,10 +184,19 @@ export const StudentForm: React.FC<StudentFormProps> = ({
         } : undefined
       };
 
-      await onSubmit(studentData);
+      if (mode === 'create') {
+        await studentsApi.create(studentData);
+      } else if (mode === 'edit' && student) {
+        await studentsApi.update(student.id, studentData);
+      }
+      
+      onSuccess?.();
       onClose();
-    } catch (error) {
-      console.error('Error submitting form:', error);
+    } catch (err) {
+      console.error('Error submitting form:', err);
+      setError('Error al guardar el estudiante. Por favor, intenta nuevamente.');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -251,9 +266,14 @@ if (formData.academicLevel === 'Maternal') {
       }}
     >
       <DialogTitle>
-        {student ? 'Editar Estudiante' : 'Nuevo Estudiante'}
+        {mode === 'create' ? 'Nuevo Estudiante' : mode === 'edit' ? 'Editar Estudiante' : 'Ver Estudiante'}
       </DialogTitle>
       <DialogContent dividers>
+        {error && (
+          <Alert severity="error" sx={{ mb: 2 }}>
+            {error}
+          </Alert>
+        )}
         <Box sx={{ mt: 1 }}>
           {/* Información del Estudiante */}
           <Typography variant="h6" gutterBottom color="primary">
