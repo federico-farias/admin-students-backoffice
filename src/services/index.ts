@@ -1,10 +1,12 @@
-// Re-exportar todas las APIs
-export { studentsApi } from './studentsApi';
-export { paymentsApi } from './paymentsApi';
-export { dashboardApi } from './dashboardApi';
-export { gradesApi } from './gradesApi';
-export { enrollmentsApi } from './enrollmentsApi';
-export { groupsApi } from './groupsApi';
+// Re-exportar todas las APIs desde los archivos individuales
+export * from './apiClient';
+export * from './studentsApi';
+export * from './paymentsApi';
+export * from './dashboardApi';
+export * from './gradesApi';
+export * from './enrollmentsApi';
+export * from './groupsApi';
+export * from './tutorsApi';
 
 // Re-exportar tipos compartidos
 export type { PaginationParams, PaginatedResponse } from './apiClient';

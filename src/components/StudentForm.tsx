@@ -13,6 +13,7 @@ import {
 } from '@mui/material';
 import { studentsApi } from '../services/api';
 import type { Student } from '../types';
+import { TutorSelector } from './TutorSelector';
 
 interface StudentFormData {
   firstName: string;
@@ -20,13 +21,24 @@ interface StudentFormData {
   email: string;
   phone: string;
   dateOfBirth: string;
-  parentName: string;
-  parentPhone: string;
-  parentEmail: string;
+  tutorIds: string[];
   address: string;
   emergencyContactName: string;
   emergencyContactPhone: string;
   emergencyContactRelationship: string;
+}
+
+interface StudentFormErrors {
+  firstName?: string;
+  lastName?: string;
+  email?: string;
+  phone?: string;
+  dateOfBirth?: string;
+  tutorIds?: string;
+  address?: string;
+  emergencyContactName?: string;
+  emergencyContactPhone?: string;
+  emergencyContactRelationship?: string;
 }
 
 interface StudentFormProps {
@@ -52,15 +64,13 @@ export const StudentForm: React.FC<StudentFormProps> = ({
     email: '',
     phone: '',
     dateOfBirth: '',
-    parentName: '',
-    parentPhone: '',
-    parentEmail: '',
+    tutorIds: [],
     address: '',
     emergencyContactName: '',
     emergencyContactPhone: '',
     emergencyContactRelationship: ''
   });
-  const [errors, setErrors] = useState<Partial<StudentFormData>>({});
+  const [errors, setErrors] = useState<StudentFormErrors>({});
 
   useEffect(() => {
     if (student) {
@@ -70,9 +80,7 @@ export const StudentForm: React.FC<StudentFormProps> = ({
         email: student.email || '',
         phone: student.phone || '',
         dateOfBirth: student.dateOfBirth,
-        parentName: student.parentName,
-        parentPhone: student.parentPhone,
-        parentEmail: student.parentEmail || '',
+        tutorIds: [], // TODO: Cargar tutorIds del estudiante cuando el backend esté disponible
         address: student.address,
         emergencyContactName: student.emergencyContact?.name || '',
         emergencyContactPhone: student.emergencyContact?.phone || '',
@@ -85,9 +93,7 @@ export const StudentForm: React.FC<StudentFormProps> = ({
         email: '',
         phone: '',
         dateOfBirth: '',
-        parentName: '',
-        parentPhone: '',
-        parentEmail: '',
+        tutorIds: [],
         address: '',
         emergencyContactName: '',
         emergencyContactPhone: '',
@@ -98,21 +104,17 @@ export const StudentForm: React.FC<StudentFormProps> = ({
   }, [student, open]);
 
   const validateForm = (): boolean => {
-    const newErrors: Partial<StudentFormData> = {};
+    const newErrors: StudentFormErrors = {};
 
     if (!formData.firstName.trim()) newErrors.firstName = 'El nombre es obligatorio';
     if (!formData.lastName.trim()) newErrors.lastName = 'El apellido es obligatorio';
     if (!formData.dateOfBirth) newErrors.dateOfBirth = 'La fecha de nacimiento es obligatoria';
-    if (!formData.parentName.trim()) newErrors.parentName = 'El nombre del padre/tutor es obligatorio';
-    if (!formData.parentPhone.trim()) newErrors.parentPhone = 'El teléfono del padre/tutor es obligatorio';
+    if (formData.tutorIds.length === 0) newErrors.tutorIds = 'Debe seleccionar al menos un tutor';
     if (!formData.address.trim()) newErrors.address = 'La dirección es obligatoria';
 
     // Validar email si se proporciona
     if (formData.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
       newErrors.email = 'Email inválido';
-    }
-    if (formData.parentEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.parentEmail)) {
-      newErrors.parentEmail = 'Email inválido';
     }
 
     setErrors(newErrors);
@@ -134,9 +136,9 @@ export const StudentForm: React.FC<StudentFormProps> = ({
         dateOfBirth: formData.dateOfBirth,
         grade: '', // Campo removido del formulario, valor por defecto
         section: '', // Campo removido del formulario, valor por defecto
-        parentName: formData.parentName.trim(),
-        parentPhone: formData.parentPhone.trim(),
-        parentEmail: formData.parentEmail || undefined,
+        parentName: '', // TODO: Obtener del primer tutor cuando el backend esté disponible
+        parentPhone: '', // TODO: Obtener del primer tutor cuando el backend esté disponible
+        parentEmail: undefined, // TODO: Obtener del primer tutor cuando el backend esté disponible
         address: formData.address.trim(),
         isActive: true,
         emergencyContact: (formData.emergencyContactName || formData.emergencyContactPhone || formData.emergencyContactRelationship) ? {
@@ -170,7 +172,7 @@ export const StudentForm: React.FC<StudentFormProps> = ({
       [field]: event.target.value as string
     }));
     // Limpiar error del campo cuando el usuario empiece a escribir
-    if (errors[field]) {
+    if (errors[field as keyof StudentFormErrors]) {
       setErrors(prev => ({
         ...prev,
         [field]: undefined
@@ -262,38 +264,22 @@ export const StudentForm: React.FC<StudentFormProps> = ({
 
           <Divider sx={{ my: 2 }} />
 
-          {/* Información del Padre/Tutor */}
-          <Typography variant="h6" gutterBottom color="primary">
-            Información del Padre/Tutor
-          </Typography>
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mb: 3 }}>
-            <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
-              <TextField
-                label="Nombre del Padre/Tutor"
-                value={formData.parentName}
-                onChange={handleInputChange('parentName')}
-                error={!!errors.parentName}
-                helperText={errors.parentName}
-                sx={{ flex: 1, minWidth: 200 }}
-              />
-              <TextField
-                label="Teléfono del Padre/Tutor"
-                value={formData.parentPhone}
-                onChange={handleInputChange('parentPhone')}
-                error={!!errors.parentPhone}
-                helperText={errors.parentPhone}
-                sx={{ flex: 1, minWidth: 200 }}
-              />
-            </Box>
-            <TextField
-              label="Email del Padre/Tutor (Opcional)"
-              type="email"
-              value={formData.parentEmail}
-              onChange={handleInputChange('parentEmail')}
-              error={!!errors.parentEmail}
-              helperText={errors.parentEmail}
-            />
-          </Box>
+          {/* Selector de Tutores */}
+          <TutorSelector
+            selectedTutorIds={formData.tutorIds}
+            onTutorIdsChange={(tutorIds) => {
+              setFormData(prev => ({ ...prev, tutorIds }));
+              // Limpiar error cuando se seleccionen tutores
+              if (tutorIds.length > 0 && errors.tutorIds) {
+                setErrors(prev => ({ ...prev, tutorIds: undefined }));
+              }
+            }}
+            label="Tutores del Estudiante"
+            required={true}
+            disabled={mode === 'view'}
+            error={errors.tutorIds}
+            helperText="Selecciona al menos un tutor responsable del estudiante"
+          />
 
           <Divider sx={{ my: 2 }} />
 

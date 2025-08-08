@@ -19,6 +19,21 @@ export interface Student {
   };
 }
 
+export interface Tutor {
+  id: string;
+  publicId: string;
+  firstName: string;
+  lastName: string;
+  email?: string;
+  phone: string;
+  address?: string;
+  relationship: string; // Padre, Madre, Abuelo, etc.
+  documentNumber?: string;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface Payment {
   id: string;
   studentId: string;
