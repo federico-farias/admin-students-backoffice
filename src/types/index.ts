@@ -5,18 +5,10 @@ export interface Student {
   email?: string;
   phone?: string;
   dateOfBirth: string;
-  grade: string;
-  section: string;
-  parentName: string;
-  parentPhone: string;
-  parentEmail?: string;
   address: string;
   isActive: boolean;
-  emergencyContact?: {
-    name: string;
-    phone: string;
-    relationship: string;
-  };
+  tutorIds: string[]; // IDs of associated tutors
+  emergencyContactIds: string[]; // IDs of associated emergency contacts
 }
 
 export interface Tutor {
@@ -130,4 +122,19 @@ export interface PaginatedResponse<T> {
   size: number;
   first: boolean;
   last: boolean;
+}
+
+export interface EmergencyContact {
+  id: string;
+  publicId: string;
+  firstName: string;
+  lastName: string;
+  email?: string;
+  phone: string;
+  address?: string;
+  relationship: string; // Familiar, Amigo, Médico, etc.
+  documentNumber?: string;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
 }

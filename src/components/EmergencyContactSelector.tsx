@@ -18,12 +18,12 @@ import {
 } from '@mui/material';
 import {
   Add as AddIcon,
-  Person as PersonIcon
+  ContactPhone as ContactPhoneIcon
 } from '@mui/icons-material';
-import { tutorsApi } from '../services/tutorsApi';
-import type { Tutor } from '../types';
+import { emergencyContactsApi } from '../services/emergencyContactsApi';
+import type { EmergencyContact } from '../types';
 
-interface TutorFormData {
+interface EmergencyContactFormData {
   firstName: string;
   lastName: string;
   email: string;
@@ -33,34 +33,36 @@ interface TutorFormData {
   documentNumber: string;
 }
 
-interface TutorSelectorProps {
-  selectedTutorIds: string[];
-  onTutorIdsChange: (tutorIds: string[]) => void;
+interface EmergencyContactSelectorProps {
+  selectedContactIds: string[];
+  onContactIdsChange: (contactIds: string[]) => void;
   label?: string;
   required?: boolean;
   disabled?: boolean;
   error?: string;
   helperText?: string;
+  maxContacts?: number;
 }
 
-export const TutorSelector: React.FC<TutorSelectorProps> = ({
-  selectedTutorIds,
-  onTutorIdsChange,
-  label = "Tutores",
+export const EmergencyContactSelector: React.FC<EmergencyContactSelectorProps> = ({
+  selectedContactIds,
+  onContactIdsChange,
+  label = "Contactos de Emergencia",
   required = false,
   disabled = false,
   error,
-  helperText
+  helperText,
+  maxContacts = 3
 }) => {
   const [searchText, setSearchText] = useState('');
-  const [searchResults, setSearchResults] = useState<Tutor[]>([]);
-  const [selectedTutors, setSelectedTutors] = useState<Tutor[]>([]);
+  const [searchResults, setSearchResults] = useState<EmergencyContact[]>([]);
+  const [selectedContacts, setSelectedContacts] = useState<EmergencyContact[]>([]);
   const [loading, setLoading] = useState(false);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [createLoading, setCreateLoading] = useState(false);
   const [createError, setCreateError] = useState<string>('');
   
-  const [formData, setFormData] = useState<TutorFormData>({
+  const [formData, setFormData] = useState<EmergencyContactFormData>({
     firstName: '',
     lastName: '',
     email: '',
@@ -70,53 +72,53 @@ export const TutorSelector: React.FC<TutorSelectorProps> = ({
     documentNumber: ''
   });
   
-  const [formErrors, setFormErrors] = useState<Partial<TutorFormData>>({});
+  const [formErrors, setFormErrors] = useState<Partial<EmergencyContactFormData>>({});
 
-  // Cargar tutores seleccionados cuando cambian los IDs
+  // Cargar contactos seleccionados cuando cambian los IDs
   useEffect(() => {
-    const loadSelectedTutors = async () => {
-      if (selectedTutorIds.length === 0) {
-        console.log('No tutor IDs, clearing selected tutors');
-        setSelectedTutors([]);
+    const loadSelectedContacts = async () => {
+      if (selectedContactIds.length === 0) {
+        console.log('No contact IDs, clearing selected contacts');
+        setSelectedContacts([]);
         return;
       }
 
-      // Verificar si ya tenemos todos los tutores necesarios
-      const currentTutorIds = selectedTutors.map(t => t.id);
-      const missingIds = selectedTutorIds.filter(id => !currentTutorIds.includes(id));
-      const extraIds = currentTutorIds.filter(id => !selectedTutorIds.includes(id));
+      // Verificar si ya tenemos todos los contactos necesarios
+      const currentContactIds = selectedContacts.map(c => c.publicId);
+      const missingIds = selectedContactIds.filter(id => !currentContactIds.includes(id));
+      const extraIds = currentContactIds.filter(id => !selectedContactIds.includes(id));
       
       // Si no hay cambios necesarios, no hacer nada
       if (missingIds.length === 0 && extraIds.length === 0) {
-        console.log('Selected tutors already match, no need to reload');
+        console.log('Selected contacts already match, no need to reload');
         return;
       }
 
       try {        
-        const tutors = await Promise.all(
-          selectedTutorIds.map(async (id) => {
-            // Si ya tenemos este tutor en el estado, no lo volvemos a cargar
-            const existingTutor = selectedTutors.find(t => t.publicId === id);
-            if (existingTutor) {
-              console.log(`Using existing tutor for ID ${id}:`, existingTutor);
-              return existingTutor;
+        const contacts = await Promise.all(
+          selectedContactIds.map(async (id) => {
+            // Si ya tenemos este contacto en el estado, no lo volvemos a cargar
+            const existingContact = selectedContacts.find(c => c.publicId === id);
+            if (existingContact) {
+              console.log(`Using existing contact for ID ${id}:`, existingContact);
+              return existingContact;
             }
             
-            const tutor = await tutorsApi.getById(id);
-            return tutor;
+            const contact = await emergencyContactsApi.getById(id);
+            return contact;
           })
         );
-        const validTutors = tutors.filter(Boolean) as Tutor[];
-        setSelectedTutors(validTutors);
+        const validContacts = contacts.filter(Boolean) as EmergencyContact[];
+        setSelectedContacts(validContacts);
       } catch (error) {
-        console.error('Error loading selected tutors:', error);
+        console.error('Error loading selected contacts:', error);
       }
     };
 
-    loadSelectedTutors();
-  }, [selectedTutorIds]); // Removemos selectedTutors de las dependencias para evitar loops
+    loadSelectedContacts();
+  }, [selectedContactIds]);
 
-  // Función para buscar tutores
+  // Función para buscar contactos
   const handleSearch = async (query: string) => {
     if (!query.trim()) {
       setSearchResults([]);
@@ -125,58 +127,64 @@ export const TutorSelector: React.FC<TutorSelectorProps> = ({
 
     try {
       setLoading(true);
-      const results = await tutorsApi.search(query);
-      // Filtrar tutores que ya están seleccionados
+      const results = await emergencyContactsApi.search(query);
+      // Filtrar contactos que ya están seleccionados
       const filteredResults = results.filter(
-        tutor => !selectedTutorIds.includes(tutor.publicId)
+        contact => !selectedContactIds.includes(contact.publicId)
       );
       setSearchResults(filteredResults);
     } catch (error) {
-      console.error('Error searching tutors:', error);
+      console.error('Error searching contacts:', error);
       setSearchResults([]);
     } finally {
       setLoading(false);
     }
   };
 
-  // Seleccionar un tutor de los resultados de búsqueda
-  const handleSelectTutor = (tutor: Tutor) => {
+  // Seleccionar un contacto de los resultados de búsqueda
+  const handleSelectContact = (contact: EmergencyContact) => {
     // Verificar que no esté ya seleccionado
-    if (selectedTutorIds.includes(tutor.publicId)) {
-      console.log('Tutor already selected, ignoring');
+    if (selectedContactIds.includes(contact.publicId)) {
+      console.log('Contact already selected, ignoring');
+      return;
+    }
+
+    // Verificar límite máximo de contactos
+    if (selectedContactIds.length >= maxContacts) {
+      console.log(`Maximum contacts limit reached (${maxContacts})`);
       return;
     }
     
-    const newTutorIds = [...selectedTutorIds, tutor.publicId];
+    const newContactIds = [...selectedContactIds, contact.publicId];
     
     // Actualizar inmediatamente el estado local
-    setSelectedTutors(prev => {
+    setSelectedContacts(prev => {
       // Verificar que no esté ya en la lista local
-      if (prev.find(t => t.publicId === tutor.publicId)) {
-        console.log('Tutor already in local state, not adding again');
+      if (prev.find(c => c.publicId === contact.publicId)) {
+        console.log('Contact already in local state, not adding again');
         return prev;
       }
-      return [...prev, tutor];
+      return [...prev, contact];
     });
     
     // Notificar al componente padre
-    onTutorIdsChange(newTutorIds);
+    onContactIdsChange(newContactIds);
     setSearchText('');
     setSearchResults([]);
   };
 
-  // Remover un tutor seleccionado
-  const handleRemoveTutor = (tutorId: string) => {
-    const newTutorIds = selectedTutorIds.filter(id => id !== tutorId);
+  // Remover un contacto seleccionado
+  const handleRemoveContact = (contactId: string) => {
+    const newContactIds = selectedContactIds.filter(id => id !== contactId);
     
     // Actualizar inmediatamente el estado local
-    setSelectedTutors(prev => prev.filter(tutor => tutor.publicId !== tutorId));
+    setSelectedContacts(prev => prev.filter(contact => contact.publicId !== contactId));
 
     // Notificar al componente padre
-    onTutorIdsChange(newTutorIds);
+    onContactIdsChange(newContactIds);
   };
 
-  // Abrir dialog para crear nuevo tutor
+  // Abrir dialog para crear nuevo contacto
   const handleOpenCreateDialog = () => {
     setFormData({
       firstName: '',
@@ -198,14 +206,14 @@ export const TutorSelector: React.FC<TutorSelectorProps> = ({
     setCreateError('');
   };
 
-  // Validar formulario de nuevo tutor
-  const validateTutorForm = (): boolean => {
-    const newErrors: Partial<TutorFormData> = {};
+  // Validar formulario de nuevo contacto
+  const validateContactForm = (): boolean => {
+    const newErrors: Partial<EmergencyContactFormData> = {};
 
     if (!formData.firstName.trim()) newErrors.firstName = 'El nombre es obligatorio';
     if (!formData.lastName.trim()) newErrors.lastName = 'El apellido es obligatorio';
     if (!formData.phone.trim()) newErrors.phone = 'El teléfono es obligatorio';
-    if (!formData.relationship) newErrors.relationship = 'El parentesco es obligatorio';
+    if (!formData.relationship) newErrors.relationship = 'La relación es obligatoria';
 
     // Validar email si se proporciona
     if (formData.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
@@ -216,15 +224,21 @@ export const TutorSelector: React.FC<TutorSelectorProps> = ({
     return Object.keys(newErrors).length === 0;
   };
 
-  // Crear nuevo tutor
-  const handleCreateTutor = async () => {
-    if (!validateTutorForm()) return;
+  // Crear nuevo contacto
+  const handleCreateContact = async () => {
+    if (!validateContactForm()) return;
+
+    // Verificar límite máximo de contactos
+    if (selectedContactIds.length >= maxContacts) {
+      setCreateError(`No puedes agregar más de ${maxContacts} contactos de emergencia.`);
+      return;
+    }
 
     try {
       setCreateLoading(true);
       setCreateError('');
 
-      const tutorData: Omit<Tutor, 'id' | 'createdAt' | 'updatedAt' | 'publicId'> = {
+      const contactData: Omit<EmergencyContact, 'id' | 'createdAt' | 'updatedAt' | 'publicId'> = {
         firstName: formData.firstName.trim(),
         lastName: formData.lastName.trim(),
         email: formData.email.trim() || undefined,
@@ -235,35 +249,35 @@ export const TutorSelector: React.FC<TutorSelectorProps> = ({
         isActive: true
       };
 
-      const newTutor = await tutorsApi.create(tutorData);
-      console.log('Created new tutor:', newTutor);
+      const newContact = await emergencyContactsApi.create(contactData);
+      console.log('Created new contact:', newContact);
       
       // Actualizar inmediatamente el estado local
-      setSelectedTutors(prev => {
+      setSelectedContacts(prev => {
         // Verificar que no esté ya en la lista
-        if (prev.find(t => t.publicId === newTutor.publicId)) {
-          console.log('New tutor already in local state, not adding again');
+        if (prev.find(c => c.publicId === newContact.publicId)) {
+          console.log('New contact already in local state, not adding again');
           return prev;
         }
-        return [...prev, newTutor];
+        return [...prev, newContact];
       });
       
-      // Agregar el nuevo tutor a la selección
-      const newTutorIds = [...selectedTutorIds, newTutor.publicId];
-      console.log('New tutor IDs after creation:', newTutorIds);
-      onTutorIdsChange(newTutorIds);
+      // Agregar el nuevo contacto a la selección
+      const newContactIds = [...selectedContactIds, newContact.publicId];
+      console.log('New contact IDs after creation:', newContactIds);
+      onContactIdsChange(newContactIds);
       
       handleCloseCreateDialog();
     } catch (err) {
-      console.error('Error creating tutor:', err);
-      setCreateError('Error al crear el tutor. Por favor, intenta nuevamente.');
+      console.error('Error creating contact:', err);
+      setCreateError('Error al crear el contacto. Por favor, intenta nuevamente.');
     } finally {
       setCreateLoading(false);
     }
   };
 
   // Manejar cambios en el input de formulario
-  const handleInputChange = (field: keyof TutorFormData) => (
+  const handleInputChange = (field: keyof EmergencyContactFormData) => (
     event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement> | { target: { value: unknown } }
   ) => {
     setFormData(prev => ({
@@ -280,6 +294,8 @@ export const TutorSelector: React.FC<TutorSelectorProps> = ({
     }
   };
 
+  const isMaxContactsReached = selectedContactIds.length >= maxContacts;
+
   return (
     <Box>
       {/* Label del componente */}
@@ -287,20 +303,20 @@ export const TutorSelector: React.FC<TutorSelectorProps> = ({
         {label} {required && '*'}
       </Typography>
 
-      {/* Tutores seleccionados */}
-      {selectedTutors.length > 0 && (
+      {/* Contactos seleccionados */}
+      {selectedContacts.length > 0 && (
         <Box mb={2}>
           <Typography variant="body2" color="text.secondary" gutterBottom>
-            Tutores seleccionados:
+            Contactos seleccionados ({selectedContacts.length}/{maxContacts}):
           </Typography>
           <Box display="flex" flexWrap="wrap" gap={1}>
-            {selectedTutors.map((tutor) => (
+            {selectedContacts.map((contact) => (
               <Chip
-                key={tutor.publicId}
-                icon={<PersonIcon />}
-                label={`${tutor.firstName} ${tutor.lastName} (${tutor.relationship})`}
-                onDelete={disabled ? undefined : () => handleRemoveTutor(tutor.publicId)}
-                color="primary"
+                key={contact.publicId}
+                icon={<ContactPhoneIcon />}
+                label={`${contact.firstName} ${contact.lastName} (${contact.relationship})`}
+                onDelete={disabled ? undefined : () => handleRemoveContact(contact.publicId)}
+                color="secondary"
                 variant="outlined"
               />
             ))}
@@ -320,7 +336,7 @@ export const TutorSelector: React.FC<TutorSelectorProps> = ({
               : `${option.firstName} ${option.lastName} (${option.relationship}) - ${option.phone}`
           }
           renderOption={(props, option) => (
-            <Box component="li" {...props} onClick={() => handleSelectTutor(option)}>
+            <Box component="li" {...props} onClick={() => handleSelectContact(option)}>
               <Box>
                 <Typography variant="body1">
                   {option.firstName} {option.lastName}
@@ -338,15 +354,17 @@ export const TutorSelector: React.FC<TutorSelectorProps> = ({
             handleSearch(newValue);
           }}
           loading={loading}
-          disabled={disabled}
+          disabled={disabled || isMaxContactsReached}
           renderInput={(params) => (
             <TextField
               {...params}
-              label="Buscar tutor por nombre, teléfono o documento"
-              placeholder="Escribe para buscar..."
+              label="Buscar contacto por nombre, teléfono o documento"
+              placeholder={isMaxContactsReached ? "Límite máximo alcanzado" : "Escribe para buscar..."}
               helperText={
-                searchText && searchResults.length === 0 && !loading
-                  ? "No se encontraron tutores. Puedes crear uno nuevo."
+                isMaxContactsReached 
+                  ? `Máximo ${maxContacts} contactos permitidos`
+                  : searchText && searchResults.length === 0 && !loading
+                  ? "No se encontraron contactos. Puedes crear uno nuevo."
                   : helperText || (error ? ' ' : undefined)
               }
               error={!!error}
@@ -356,31 +374,33 @@ export const TutorSelector: React.FC<TutorSelectorProps> = ({
             searchText ? (
               <Box textAlign="center" py={2}>
                 <Typography variant="body2" color="text.secondary" gutterBottom>
-                  No se encontraron tutores
+                  No se encontraron contactos
                 </Typography>
-                <Button
-                  size="small"
-                  startIcon={<AddIcon />}
-                  onClick={handleOpenCreateDialog}
-                >
-                  Crear nuevo tutor
-                </Button>
+                {!isMaxContactsReached && (
+                  <Button
+                    size="small"
+                    startIcon={<AddIcon />}
+                    onClick={handleOpenCreateDialog}
+                  >
+                    Crear nuevo contacto
+                  </Button>
+                )}
               </Box>
             ) : (
-              "Escribe para buscar tutores"
+              "Escribe para buscar contactos"
             )
           }
         />
 
-        {/* Botón para crear nuevo tutor */}
+        {/* Botón para crear nuevo contacto */}
         <Button
           variant="outlined"
           startIcon={<AddIcon />}
           onClick={handleOpenCreateDialog}
-          disabled={disabled}
+          disabled={disabled || isMaxContactsReached}
           sx={{ minWidth: 'auto', whiteSpace: 'nowrap' }}
         >
-          Nuevo Tutor
+          Nuevo Contacto
         </Button>
       </Box>
 
@@ -391,14 +411,14 @@ export const TutorSelector: React.FC<TutorSelectorProps> = ({
         </Typography>
       )}
 
-      {/* Dialog para crear nuevo tutor */}
+      {/* Dialog para crear nuevo contacto */}
       <Dialog
         open={createDialogOpen}
         onClose={handleCloseCreateDialog}
         maxWidth="sm"
         fullWidth
       >
-        <DialogTitle>Crear Nuevo Tutor</DialogTitle>
+        <DialogTitle>Crear Nuevo Contacto de Emergencia</DialogTitle>
         <DialogContent dividers>
           {createError && (
             <Alert severity="error" sx={{ mb: 2 }}>
@@ -436,21 +456,21 @@ export const TutorSelector: React.FC<TutorSelectorProps> = ({
                 sx={{ flex: 1 }}
               />
               <FormControl sx={{ flex: 1 }} error={!!formErrors.relationship}>
-                <InputLabel>Parentesco</InputLabel>
+                <InputLabel>Relación</InputLabel>
                 <Select
                   value={formData.relationship}
-                  label="Parentesco"
+                  label="Relación"
                   onChange={handleInputChange('relationship')}
                 >
-                  <MenuItem value="Padre">Padre</MenuItem>
-                  <MenuItem value="Madre">Madre</MenuItem>
-                  <MenuItem value="Abuelo">Abuelo</MenuItem>
-                  <MenuItem value="Abuela">Abuela</MenuItem>
-                  <MenuItem value="Tío">Tío</MenuItem>
-                  <MenuItem value="Tía">Tía</MenuItem>
-                  <MenuItem value="Hermano">Hermano</MenuItem>
-                  <MenuItem value="Hermana">Hermana</MenuItem>
-                  <MenuItem value="Tutor Legal">Tutor Legal</MenuItem>
+                  <MenuItem value="Familiar">Familiar</MenuItem>
+                  <MenuItem value="Amigo de la familia">Amigo de la familia</MenuItem>
+                  <MenuItem value="Vecino">Vecino</MenuItem>
+                  <MenuItem value="Médico">Médico</MenuItem>
+                  <MenuItem value="Pediatra">Pediatra</MenuItem>
+                  <MenuItem value="Enfermero/a">Enfermero/a</MenuItem>
+                  <MenuItem value="Cuidador">Cuidador</MenuItem>
+                  <MenuItem value="Profesor">Profesor</MenuItem>
+                  <MenuItem value="Directivo escolar">Directivo escolar</MenuItem>
                   <MenuItem value="Otro">Otro</MenuItem>
                 </Select>
                 {formErrors.relationship && (
@@ -494,11 +514,11 @@ export const TutorSelector: React.FC<TutorSelectorProps> = ({
             Cancelar
           </Button>
           <Button
-            onClick={handleCreateTutor}
+            onClick={handleCreateContact}
             variant="contained"
             disabled={createLoading}
           >
-            {createLoading ? 'Creando...' : 'Crear Tutor'}
+            {createLoading ? 'Creando...' : 'Crear Contacto'}
           </Button>
         </DialogActions>
       </Dialog>

@@ -7,6 +7,7 @@ export * from './gradesApi';
 export * from './enrollmentsApi';
 export * from './groupsApi';
 export * from './tutorsApi';
+export * from './emergencyContactsApi';
 
 // Re-exportar tipos compartidos
 export type { PaginationParams, PaginatedResponse } from './apiClient';

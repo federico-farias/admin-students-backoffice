@@ -15,7 +15,8 @@ const mockTutors: Tutor[] = [
     documentNumber: '12345678',
     isActive: true,
     createdAt: '2024-01-01T10:00:00Z',
-    updatedAt: '2024-01-01T10:00:00Z'
+    updatedAt: '2024-01-01T10:00:00Z',
+    publicId: ''
   },
   {
     id: '2',
@@ -28,7 +29,8 @@ const mockTutors: Tutor[] = [
     documentNumber: '87654321',
     isActive: true,
     createdAt: '2024-01-02T10:00:00Z',
-    updatedAt: '2024-01-02T10:00:00Z'
+    updatedAt: '2024-01-02T10:00:00Z',
+    publicId: ''
   },
   {
     id: '3',
@@ -41,7 +43,8 @@ const mockTutors: Tutor[] = [
     documentNumber: '11223344',
     isActive: true,
     createdAt: '2024-01-03T10:00:00Z',
-    updatedAt: '2024-01-03T10:00:00Z'
+    updatedAt: '2024-01-03T10:00:00Z',
+    publicId: ''
   }
 ];
 

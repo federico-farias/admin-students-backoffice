@@ -14,6 +14,7 @@ import {
 import { studentsApi } from '../services/api';
 import type { Student } from '../types';
 import { TutorSelector } from './TutorSelector';
+import { EmergencyContactSelector } from './EmergencyContactSelector';
 
 interface StudentFormData {
   firstName: string;
@@ -23,9 +24,7 @@ interface StudentFormData {
   dateOfBirth: string;
   tutorIds: string[];
   address: string;
-  emergencyContactName: string;
-  emergencyContactPhone: string;
-  emergencyContactRelationship: string;
+  emergencyContactIds: string[];
 }
 
 interface StudentFormErrors {
@@ -36,9 +35,7 @@ interface StudentFormErrors {
   dateOfBirth?: string;
   tutorIds?: string;
   address?: string;
-  emergencyContactName?: string;
-  emergencyContactPhone?: string;
-  emergencyContactRelationship?: string;
+  emergencyContactIds?: string;
 }
 
 interface StudentFormProps {
@@ -66,25 +63,22 @@ export const StudentForm: React.FC<StudentFormProps> = ({
     dateOfBirth: '',
     tutorIds: [],
     address: '',
-    emergencyContactName: '',
-    emergencyContactPhone: '',
-    emergencyContactRelationship: ''
+    emergencyContactIds: []
   });
   const [errors, setErrors] = useState<StudentFormErrors>({});
 
   useEffect(() => {
     if (student) {
+      console.log('Editing student:', student);
       setFormData({
         firstName: student.firstName,
         lastName: student.lastName,
         email: student.email || '',
         phone: student.phone || '',
         dateOfBirth: student.dateOfBirth,
-        tutorIds: [], // TODO: Cargar tutorIds del estudiante cuando el backend esté disponible
+        tutorIds: student.tutorIds || [],
         address: student.address,
-        emergencyContactName: student.emergencyContact?.name || '',
-        emergencyContactPhone: student.emergencyContact?.phone || '',
-        emergencyContactRelationship: student.emergencyContact?.relationship || ''
+        emergencyContactIds: student.emergencyContactIds || []
       });
     } else {
       setFormData({
@@ -95,9 +89,7 @@ export const StudentForm: React.FC<StudentFormProps> = ({
         dateOfBirth: '',
         tutorIds: [],
         address: '',
-        emergencyContactName: '',
-        emergencyContactPhone: '',
-        emergencyContactRelationship: ''
+        emergencyContactIds: []
       });
     }
     setErrors({});
@@ -127,25 +119,19 @@ export const StudentForm: React.FC<StudentFormProps> = ({
     try {
       setLoading(true);
       setError('');
+
+      console.log('Submitting student data:', formData);
       
       const studentData: Omit<Student, 'id'> = {
-        firstName: formData.firstName.trim(),
-        lastName: formData.lastName.trim(),
+        firstName: formData.firstName,
+        lastName: formData.lastName,
         email: formData.email || undefined,
         phone: formData.phone || undefined,
         dateOfBirth: formData.dateOfBirth,
-        grade: '', // Campo removido del formulario, valor por defecto
-        section: '', // Campo removido del formulario, valor por defecto
-        parentName: '', // TODO: Obtener del primer tutor cuando el backend esté disponible
-        parentPhone: '', // TODO: Obtener del primer tutor cuando el backend esté disponible
-        parentEmail: undefined, // TODO: Obtener del primer tutor cuando el backend esté disponible
-        address: formData.address.trim(),
+        address: formData.address,
         isActive: true,
-        emergencyContact: (formData.emergencyContactName || formData.emergencyContactPhone || formData.emergencyContactRelationship) ? {
-          name: formData.emergencyContactName || '',
-          phone: formData.emergencyContactPhone || '',
-          relationship: formData.emergencyContactRelationship || ''
-        } : undefined
+        tutorIds: formData.tutorIds,
+        emergencyContactIds: formData.emergencyContactIds,
       };
 
       if (mode === 'create') {
@@ -283,32 +269,22 @@ export const StudentForm: React.FC<StudentFormProps> = ({
 
           <Divider sx={{ my: 2 }} />
 
-          {/* Contacto de Emergencia */}
-          <Typography variant="h6" gutterBottom color="primary">
-            Contacto de Emergencia (Opcional)
-          </Typography>
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-            <TextField
-              label="Nombre"
-              value={formData.emergencyContactName}
-              onChange={handleInputChange('emergencyContactName')}
-            />
-            <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
-              <TextField
-                label="Teléfono"
-                value={formData.emergencyContactPhone}
-                onChange={handleInputChange('emergencyContactPhone')}
-                sx={{ flex: 1, minWidth: 200 }}
-              />
-              <TextField
-                label="Parentesco"
-                placeholder="Ej: Tío, Abuelo, etc."
-                value={formData.emergencyContactRelationship}
-                onChange={handleInputChange('emergencyContactRelationship')}
-                sx={{ flex: 1, minWidth: 200 }}
-              />
-            </Box>
-          </Box>
+          {/* Contactos de Emergencia */}
+          <EmergencyContactSelector
+            selectedContactIds={formData.emergencyContactIds}
+            onContactIdsChange={(contactIds) => {
+              setFormData(prev => ({ ...prev, emergencyContactIds: contactIds }));
+              
+              // Limpiar error si se selecciona al menos un contacto
+              if (contactIds.length > 0 && errors.emergencyContactIds) {
+                setErrors(prev => ({ ...prev, emergencyContactIds: undefined }));
+              }
+            }}
+            required={false}
+            disabled={mode === 'view'}
+            error={errors.emergencyContactIds}
+            maxContacts={2}
+          />
         </Box>
       </DialogContent>
       <DialogActions sx={{ p: 3 }}>
