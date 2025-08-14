@@ -7,33 +7,21 @@ import {
   Select,
   MenuItem,
   Paper,
-  Chip,
   Typography,
   CircularProgress,
   Collapse,
   IconButton,
   Alert,
   Button,
-  Tooltip,
-  Avatar,
-  Card,
-  CardContent,
   Pagination,
-  Stack,
-  Divider,
-  Badge,
 } from '@mui/material';
 import {
   Search as SearchIcon,
   ExpandMore as ExpandMoreIcon,
   ExpandLess as ExpandLessIcon,
   Add as AddIcon,
-  Edit as EditIcon,
-  Delete as DeleteIcon,
-  Visibility as ViewIcon,
   Person as PersonIcon
 } from '@mui/icons-material';
-import VisibilityIcon from '@mui/icons-material/Visibility';
 import type { Student } from '../types';
 import {
   studentsApi,
@@ -41,7 +29,6 @@ import {
   type PaginationParams,
   type PaginatedResponse
 } from '../services/api';
-import { getFullName, getInitials, getAge, formatDate } from '../utils/formatters';
 import StudentCard from './StudentCard';
 
 interface StudentSearchProps {

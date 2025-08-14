@@ -41,58 +41,6 @@ const StudentCard: React.FC<StudentCardProps> = ({
     <Card sx={{ height: 'fit-content', position: 'relative' }}>
       <CardContent sx={{ pt: 2, pb: 2 }}>
         <Stack spacing={1}>
-          {/* Controles flotantes */}
-          {(showManagementActions || showSelectAction) && (
-            <Box
-              sx={{
-                position: 'absolute',
-                top: 8,
-                right: 8,
-                bgcolor: 'rgba(255,255,255,0.85)',
-                borderRadius: 3,
-                border: '1px solid #e0e0e0',
-                p: 1,
-                display: 'flex',
-                gap: 2,
-                zIndex: 10,
-                alignItems: 'center',
-                boxShadow: 0,
-              }}
-            >
-              {showManagementActions && (
-                <>
-                  {onView && (
-                    <Tooltip title="Ver detalles">
-                      <IconButton size="small" onClick={() => onView(student)} sx={{ color: 'info.main', p: 1 }}>
-                        <VisibilityIcon fontSize="small" />
-                      </IconButton>
-                    </Tooltip>
-                  )}
-                  {onEdit && (
-                    <Tooltip title="Editar">
-                      <IconButton size="small" onClick={() => onEdit(student)} sx={{ color: 'warning.main', p: 1 }}>
-                        <EditIcon fontSize="small" />
-                      </IconButton>
-                    </Tooltip>
-                  )}
-                  {onDelete && (
-                    <Tooltip title="Eliminar">
-                      <IconButton size="small" onClick={() => onDelete(student)} sx={{ color: 'error.main', p: 1 }}>
-                        <DeleteIcon fontSize="small" />
-                      </IconButton>
-                    </Tooltip>
-                  )}
-                </>
-              )}
-              {showSelectAction && onSelect && (
-                <Tooltip title="Seleccionar estudiante">
-                  <IconButton size="small" onClick={() => onSelect(student)} sx={{ color: 'primary.main', p: 1 }}>
-                    <PersonIcon fontSize="small" />
-                  </IconButton>
-                </Tooltip>
-              )}
-            </Box>
-          )}
           {/* Bloque principal: Avatar, nombre y estado */}
           <Stack direction="row" alignItems="flex-start" spacing={2}>
             <Badge color={student.isActive ? 'success' : 'default'} variant="dot" overlap="circular">
@@ -113,11 +61,6 @@ const StudentCard: React.FC<StudentCardProps> = ({
                     </Box>
                     <Typography variant="caption" color="text.secondary" sx={{ fontSize: 14 }}>
                       <strong>Edad:</strong> {getAge(student.dateOfBirth)} años
-                    </Typography>
-                  </Box>
-                  <Box display="flex" alignItems="center" gap={0.5}>
-                    <Typography variant="caption" color="text.secondary" sx={{ fontSize: 14 }}>
-                      <strong>Registro:</strong> {formatDate(student.createdAt)}
                     </Typography>
                   </Box>
                 </Box>
@@ -172,6 +115,60 @@ const StudentCard: React.FC<StudentCardProps> = ({
           </Stack>
         </Stack>
       </CardContent>
+      {/* Controles en la parte inferior con fecha de registro a la izquierda */}
+      {(showManagementActions || showSelectAction) && (
+        <Box
+          sx={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            gap: 2,
+            px: 2,
+            py: 1.5,
+            bgcolor: 'grey.100',
+            borderTop: '1px solid #e0e0e0',
+            borderRadius: '0 0 12px 12px',
+          }}
+        >
+          <Typography variant="caption" color="text.secondary" sx={{ fontSize: 13 }}>
+            <strong>Registro:</strong> {formatDate(student.createdAt)}
+          </Typography>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+            {showManagementActions && (
+              <>
+                {onView && (
+                  <Tooltip title="Ver detalles">
+                    <IconButton size="small" onClick={() => onView(student)} sx={{ color: 'info.main' }}>
+                      <VisibilityIcon fontSize="small" />
+                    </IconButton>
+                  </Tooltip>
+                )}
+                {onEdit && (
+                  <Tooltip title="Editar">
+                    <IconButton size="small" onClick={() => onEdit(student)} sx={{ color: 'warning.main' }}>
+                      <EditIcon fontSize="small" />
+                    </IconButton>
+                  </Tooltip>
+                )}
+                {onDelete && (
+                  <Tooltip title="Eliminar">
+                    <IconButton size="small" onClick={() => onDelete(student)} sx={{ color: 'error.main' }}>
+                      <DeleteIcon fontSize="small" />
+                    </IconButton>
+                  </Tooltip>
+                )}
+              </>
+            )}
+            {showSelectAction && onSelect && (
+              <Tooltip title="Seleccionar estudiante">
+                <IconButton size="small" onClick={() => onSelect(student)} sx={{ color: 'primary.main' }}>
+                  <PersonIcon fontSize="small" />
+                </IconButton>
+              </Tooltip>
+            )}
+          </Box>
+        </Box>
+      )}
     </Card>
   );
 };
