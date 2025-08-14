@@ -9,7 +9,8 @@ import {
   Avatar,
   Typography,
   IconButton,
-  Tooltip
+  Tooltip,
+  Chip
 } from '@mui/material';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import EditIcon from '@mui/icons-material/Edit';
@@ -70,14 +71,55 @@ const StudentCard: React.FC<StudentCardProps> = ({
           <Divider sx={{ my: 1, borderColor: 'grey.300' }} />
           <Stack spacing={1}>
             {/* Tutor principal */}
-            {student.tutors?.[0] && (
+            {student.tutors?.length > 0 && (
               <Box>
                 <Typography variant="body2" color="text.secondary" sx={{ display: 'flex', alignItems: 'center', gap: 0.5, fontWeight: 600, fontSize: 15 }}>
                   <Box component="span" sx={{ display: 'flex', alignItems: 'center', mr: 0.5 }}>
                     {/* Icono de tutor */}
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="8" r="4" stroke="#888" strokeWidth="2"/><path d="M4 20c0-2.21 3.58-4 8-4s8 1.79 8 4" stroke="#888" strokeWidth="2"/></svg>
                   </Box>
-                  Tutor: {student.tutors[0].firstName} {student.tutors[0].lastName}
+                  {student.tutors.length > 1 ? (
+                    <Tooltip title={student.tutors[0].firstName + ' ' + student.tutors[0].lastName} disableHoverListener={false}>
+                      <Typography
+                        variant="body2"
+                        color="text.secondary"
+                        sx={{
+                          fontWeight: 600,
+                          fontSize: 15,
+                          maxWidth: 160,
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          whiteSpace: 'nowrap',
+                          display: 'inline-block',
+                          verticalAlign: 'middle',
+                        }}
+                        noWrap
+                      >
+                        Tutor: {student.tutors[0].firstName} {student.tutors[0].lastName}
+                      </Typography>
+                    </Tooltip>
+                  ) : (
+                    <Typography
+                      variant="body2"
+                      color="text.secondary"
+                      sx={{ fontWeight: 600, fontSize: 15, display: 'inline-block', verticalAlign: 'middle' }}
+                    >
+                      Tutor: {student.tutors[0].firstName} {student.tutors[0].lastName}
+                    </Typography>
+                  )}
+                  {student.tutors.length > 1 && (
+                    <Tooltip
+                      title={student.tutors.slice(1).map(t => `${t.firstName} ${t.lastName} (${t.relationship || ''}${t.phone ? ', Tel: ' + t.phone : ''})`).join('\n')}
+                      arrow
+                    >
+                      <Chip
+                        label={`+${student.tutors.length - 1} más`}
+                        size="small"
+                        sx={{ ml: 1, fontWeight: 500 }}
+                        color="default"
+                      />
+                    </Tooltip>
+                  )}
                 </Typography>
                 <Stack direction="row" spacing={2} sx={{ ml: 3 }}>
                   {student.tutors[0].relationship && (
@@ -94,14 +136,55 @@ const StudentCard: React.FC<StudentCardProps> = ({
               </Box>
             )}
             {/* Contacto de emergencia principal */}
-            {student.emergencyContacts?.[0] && (
+            {student.emergencyContacts?.length > 0 && (
               <Box>
                 <Typography variant="body2" color="text.secondary" sx={{ display: 'flex', alignItems: 'center', gap: 0.5, fontWeight: 600, fontSize: 15 }}>
                   <Box component="span" sx={{ display: 'flex', alignItems: 'center', mr: 0.5 }}>
                     {/* Icono de emergencia */}
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="10" stroke="#FF9800" strokeWidth="2"/><path d="M12 8v4" stroke="#FF9800" strokeWidth="2" strokeLinecap="round"/><circle cx="12" cy="16" r="1" fill="#FF9800"/></svg>
                   </Box>
-                  Contacto: {student.emergencyContacts[0].firstName} {student.emergencyContacts[0].lastName}
+                  {student.emergencyContacts.length > 1 ? (
+                    <Tooltip title={student.emergencyContacts[0].firstName + ' ' + student.emergencyContacts[0].lastName} disableHoverListener={false}>
+                      <Typography
+                        variant="body2"
+                        color="text.secondary"
+                        sx={{
+                          fontWeight: 600,
+                          fontSize: 15,
+                          maxWidth: 160,
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          whiteSpace: 'nowrap',
+                          display: 'inline-block',
+                          verticalAlign: 'middle',
+                        }}
+                        noWrap
+                      >
+                        Contacto: {student.emergencyContacts[0].firstName} {student.emergencyContacts[0].lastName}
+                      </Typography>
+                    </Tooltip>
+                  ) : (
+                    <Typography
+                      variant="body2"
+                      color="text.secondary"
+                      sx={{ fontWeight: 600, fontSize: 15, display: 'inline-block', verticalAlign: 'middle' }}
+                    >
+                      Contacto: {student.emergencyContacts[0].firstName} {student.emergencyContacts[0].lastName}
+                    </Typography>
+                  )}
+                  {student.emergencyContacts.length > 1 && (
+                    <Tooltip
+                      title={student.emergencyContacts.slice(1).map(c => `${c.firstName} ${c.lastName}${c.phone ? ' (Tel: ' + c.phone + ')' : ''}`).join('\n')}
+                      arrow
+                    >
+                      <Chip
+                        label={`+${student.emergencyContacts.length - 1} más`}
+                        size="small"
+                        sx={{ ml: 1, fontWeight: 500, bgcolor: '#FFF3E0', color: '#FF9800' }}
+                        color="default"
+                      />
+                    </Tooltip>
+                  )}
                 </Typography>
                 <Stack direction="row" spacing={2} sx={{ ml: 3 }}>
                   {student.emergencyContacts[0].phone && (
