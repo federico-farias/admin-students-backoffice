@@ -38,6 +38,8 @@ import {
   type PaginatedResponse
 } from '../services/api';
 import { getFullName, getInitials, getAge, formatDate } from '../utils/formatters';
+import { EmergencyContactInfo } from './EmergencyContactInfo';
+import { TutorInfo } from './TutorInfo';
 
 interface StudentSearchProps {
   onStudentSelect?: (student: Student) => void;
@@ -307,14 +309,12 @@ export const StudentSearch: React.FC<StudentSearchProps> = ({
                         <Typography variant="body2" color="text.secondary" gutterBottom>
                           <strong>Edad:</strong> {getAge(student.dateOfBirth)} años
                         </Typography>
+                        {/* Renderiza el tutor si existe */}
+                        <TutorInfo tutor={student.tutors?.[0]} />
+                        {/* Renderiza el contacto de emergencia si existe */}
+                        <EmergencyContactInfo contact={student.emergencyContacts?.[0]} />
                         <Typography variant="body2" color="text.secondary" gutterBottom>
-                          <strong>Padre/Tutor:</strong> {student.parentName}
-                        </Typography>
-                        <Typography variant="body2" color="text.secondary" gutterBottom>
-                          <strong>Teléfono:</strong> {student.parentPhone}
-                        </Typography>
-                        <Typography variant="body2" color="text.secondary" gutterBottom>
-                          <strong>Fecha de inscripción:</strong> {formatDate(student.enrollmentDate)}
+                          <strong>Fecha de registro:</strong> {formatDate(student.createdAt)}
                         </Typography>
                       </Box>
 
@@ -322,11 +322,6 @@ export const StudentSearch: React.FC<StudentSearchProps> = ({
                         <Chip
                           label={student.isActive ? 'Activo' : 'Inactivo'}
                           color={student.isActive ? 'success' : 'default'}
-                          size="small"
-                        />
-                        <Chip
-                          label={`${student.grade} ${student.section}`}
-                          variant="outlined"
                           size="small"
                         />
                       </Box>

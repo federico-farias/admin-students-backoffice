@@ -9,7 +9,10 @@ export interface Student {
   address: string;
   isActive: boolean;
   tutorIds: string[]; // IDs of associated tutors
+  tutors: Tutor[];
   emergencyContactIds: string[]; // IDs of associated emergency contacts
+  emergencyContacts: EmergencyContact[];
+  createdAt: string;
 }
 
 export interface Tutor {
