@@ -18,6 +18,7 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import PersonIcon from '@mui/icons-material/Person';
 import { getFullName, getInitials, getAge, formatDate } from '../utils/formatters';
 import type { Student } from '../types';
+import './studentCard.css';
 
 interface StudentCardProps {
   student: Student;
@@ -39,28 +40,28 @@ const StudentCard: React.FC<StudentCardProps> = ({
   showManagementActions = true
 }) => {
   return (
-    <Card sx={{ height: 'fit-content', position: 'relative' }}>
-      <CardContent sx={{ pt: 2, pb: 2 }}>
+    <Card className="student-card">
+      <CardContent className="student-card-content">
         <Stack spacing={1}>
           {/* Bloque principal: Avatar, nombre y estado */}
           <Stack direction="row" alignItems="flex-start" spacing={2}>
             <Badge color={student.isActive ? 'success' : 'default'} variant="dot" overlap="circular">
-              <Avatar sx={{ bgcolor: 'primary.main', width: 44, height: 44, fontSize: 20 }}>
+              <Avatar className="student-card-avatar">
                 {getInitials(student.firstName, student.lastName)}
               </Avatar>
             </Badge>
             <Box flex={1} minWidth={0}>
-              <Typography variant="h6" component="h3" noWrap sx={{ fontWeight: 700 }}>
+              <Typography variant="h6" component="h3" className="student-card-title">
                 {getFullName(student.firstName, student.lastName)}
               </Typography>
               <Stack direction="row" alignItems="center" spacing={2} sx={{ mt: 0.5 }}>
                 <Box display="flex" alignItems="center" gap={1}>
                   <Box display="flex" alignItems="center" gap={0.5}>
-                    <Box component="span" sx={{ display: 'flex', alignItems: 'center', mr: 0.5 }}>
+                    <Box component="span" className="student-card-age">
                       {/* Icono de edad */}
                       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="3" y="4" width="18" height="16" rx="2" stroke="#888" strokeWidth="2"/><path d="M16 2v4M8 2v4" stroke="#888" strokeWidth="2" strokeLinecap="round"/><path d="M3 10h18" stroke="#888" strokeWidth="2"/></svg>
                     </Box>
-                    <Typography variant="caption" color="text.secondary" sx={{ fontSize: 14 }}>
+                    <Typography variant="caption" className="student-card-age">
                       <strong>Edad:</strong> {getAge(student.dateOfBirth)} años
                     </Typography>
                   </Box>
@@ -68,13 +69,13 @@ const StudentCard: React.FC<StudentCardProps> = ({
               </Stack>
             </Box>
           </Stack>
-          <Divider sx={{ my: 1, borderColor: 'grey.300' }} />
+          <Divider className="student-card-divider" />
           <Stack spacing={1}>
             {/* Tutor principal */}
             {student.tutors?.length > 0 && (
               <Box>
-                <Typography variant="body2" color="text.secondary" sx={{ display: 'flex', alignItems: 'center', gap: 0.5, fontWeight: 600, fontSize: 15 }}>
-                  <Box component="span" sx={{ display: 'flex', alignItems: 'center', mr: 0.5 }}>
+                <Box display="flex" alignItems="center" gap={1} minWidth={0}>
+                  <Box component="span" className="student-card-tutor-icon">
                     {/* Icono de tutor */}
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="8" r="4" stroke="#888" strokeWidth="2"/><path d="M4 20c0-2.21 3.58-4 8-4s8 1.79 8 4" stroke="#888" strokeWidth="2"/></svg>
                   </Box>
@@ -83,15 +84,12 @@ const StudentCard: React.FC<StudentCardProps> = ({
                       <Typography
                         variant="body2"
                         color="text.secondary"
+                        className="student-card-tutor"
                         sx={{
-                          fontWeight: 600,
-                          fontSize: 15,
                           maxWidth: 160,
                           overflow: 'hidden',
                           textOverflow: 'ellipsis',
                           whiteSpace: 'nowrap',
-                          display: 'inline-block',
-                          verticalAlign: 'middle',
                         }}
                         noWrap
                       >
@@ -102,7 +100,7 @@ const StudentCard: React.FC<StudentCardProps> = ({
                     <Typography
                       variant="body2"
                       color="text.secondary"
-                      sx={{ fontWeight: 600, fontSize: 15, display: 'inline-block', verticalAlign: 'middle' }}
+                      className="student-card-tutor"
                     >
                       Tutor: {student.tutors[0].firstName} {student.tutors[0].lastName}
                     </Typography>
@@ -115,13 +113,13 @@ const StudentCard: React.FC<StudentCardProps> = ({
                       <Chip
                         label={`+${student.tutors.length - 1} más`}
                         size="small"
-                        sx={{ ml: 1, fontWeight: 500 }}
+                        className="student-card-chip"
                         color="default"
                       />
                     </Tooltip>
                   )}
-                </Typography>
-                <Stack direction="row" spacing={2} sx={{ ml: 3 }}>
+                </Box>
+                <Stack direction="row" spacing={2} className="student-card-secondary">
                   {student.tutors[0].relationship && (
                     <Typography variant="body2" color="text.secondary" sx={{ fontSize: 14 }}>
                       Relación: {student.tutors[0].relationship}
@@ -138,8 +136,8 @@ const StudentCard: React.FC<StudentCardProps> = ({
             {/* Contacto de emergencia principal */}
             {student.emergencyContacts?.length > 0 && (
               <Box>
-                <Typography variant="body2" color="text.secondary" sx={{ display: 'flex', alignItems: 'center', gap: 0.5, fontWeight: 600, fontSize: 15 }}>
-                  <Box component="span" sx={{ display: 'flex', alignItems: 'center', mr: 0.5 }}>
+                <Box display="flex" alignItems="center" gap={1} minWidth={0}>
+                  <Box component="span" className="student-card-contact-icon">
                     {/* Icono de emergencia */}
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="10" stroke="#FF9800" strokeWidth="2"/><path d="M12 8v4" stroke="#FF9800" strokeWidth="2" strokeLinecap="round"/><circle cx="12" cy="16" r="1" fill="#FF9800"/></svg>
                   </Box>
@@ -148,15 +146,12 @@ const StudentCard: React.FC<StudentCardProps> = ({
                       <Typography
                         variant="body2"
                         color="text.secondary"
+                        className="student-card-contact"
                         sx={{
-                          fontWeight: 600,
-                          fontSize: 15,
                           maxWidth: 160,
                           overflow: 'hidden',
                           textOverflow: 'ellipsis',
                           whiteSpace: 'nowrap',
-                          display: 'inline-block',
-                          verticalAlign: 'middle',
                         }}
                         noWrap
                       >
@@ -167,7 +162,7 @@ const StudentCard: React.FC<StudentCardProps> = ({
                     <Typography
                       variant="body2"
                       color="text.secondary"
-                      sx={{ fontWeight: 600, fontSize: 15, display: 'inline-block', verticalAlign: 'middle' }}
+                      className="student-card-contact"
                     >
                       Contacto: {student.emergencyContacts[0].firstName} {student.emergencyContacts[0].lastName}
                     </Typography>
@@ -180,13 +175,13 @@ const StudentCard: React.FC<StudentCardProps> = ({
                       <Chip
                         label={`+${student.emergencyContacts.length - 1} más`}
                         size="small"
-                        sx={{ ml: 1, fontWeight: 500, bgcolor: '#FFF3E0', color: '#FF9800' }}
+                        className="student-card-chip student-card-chip-emergency"
                         color="default"
                       />
                     </Tooltip>
                   )}
-                </Typography>
-                <Stack direction="row" spacing={2} sx={{ ml: 3 }}>
+                </Box>
+                <Stack direction="row" spacing={2} className="student-card-secondary">
                   {student.emergencyContacts[0].phone && (
                     <Typography variant="body2" color="text.secondary" sx={{ fontSize: 14 }}>
                       Tel: {student.emergencyContacts[0].phone}
@@ -200,20 +195,8 @@ const StudentCard: React.FC<StudentCardProps> = ({
       </CardContent>
       {/* Controles en la parte inferior con fecha de registro a la izquierda */}
       {(showManagementActions || showSelectAction) && (
-        <Box
-          sx={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            gap: 2,
-            px: 2,
-            py: 1.5,
-            bgcolor: 'grey.100',
-            borderTop: '1px solid #e0e0e0',
-            borderRadius: '0 0 12px 12px',
-          }}
-        >
-          <Typography variant="caption" color="text.secondary" sx={{ fontSize: 13 }}>
+        <Box className="student-card-actions">
+          <Typography variant="caption" className="student-card-register">
             <strong>Registro:</strong> {formatDate(student.createdAt)}
           </Typography>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
