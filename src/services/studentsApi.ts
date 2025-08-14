@@ -79,7 +79,7 @@ export const studentsApi = {
     }
   },
 
-  async create(student: Omit<Student, 'id'>): Promise<Student> {
+  async create(student: Omit<Student, 'id' | 'publicId'>): Promise<Student> {
     if (USE_MOCK) {
       await delay(500);
       const newStudent: Student = {

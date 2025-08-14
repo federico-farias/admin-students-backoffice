@@ -121,8 +121,8 @@ export const StudentForm: React.FC<StudentFormProps> = ({
       setError('');
 
       console.log('Submitting student data:', formData);
-      
-      const studentData: Omit<Student, 'id'> = {
+
+      const studentData: Omit<Student, 'id' | 'publicId'> = {
         firstName: formData.firstName,
         lastName: formData.lastName,
         email: formData.email || undefined,
@@ -137,7 +137,7 @@ export const StudentForm: React.FC<StudentFormProps> = ({
       if (mode === 'create') {
         await studentsApi.create(studentData);
       } else if (mode === 'edit' && student) {
-        await studentsApi.update(student.id, studentData);
+        await studentsApi.update(student.publicId, studentData);
       }
       
       onSuccess?.();
