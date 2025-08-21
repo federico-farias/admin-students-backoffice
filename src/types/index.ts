@@ -142,3 +142,28 @@ export interface EmergencyContact {
   createdAt: string;
   updatedAt: string;
 }
+
+// DTOs para requests al backend
+export interface StudentTutorRequest {
+  tutorPublicId: string;
+  relationship: string;
+}
+
+export interface StudentEmergencyContactRequest {
+  emergencyContactPublicId: string;
+  relationship: string;
+}
+
+export interface CreateStudentRequest {
+  firstName: string;
+  lastName: string;
+  email?: string;
+  phone?: string;
+  dateOfBirth: string;
+  address: string;
+  tutors: StudentTutorRequest[];
+  emergencyContactsInfo: StudentEmergencyContactRequest[];
+}
+
+export interface UpdateStudentRequest extends CreateStudentRequest {
+}

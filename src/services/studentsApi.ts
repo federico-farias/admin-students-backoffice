@@ -1,5 +1,5 @@
 import axios from 'axios';
-import type { Student } from '../types';
+import type { Student, CreateStudentRequest, UpdateStudentRequest } from '../types';
 import { apiClient, USE_MOCK, delay } from './apiClient';
 import type { PaginationParams, PaginatedResponse } from './apiClient';
 
@@ -290,5 +290,70 @@ export const studentsApi = {
         last: end >= filteredStudents.length
       };
     }
+  },
+
+  // Nuevas funciones que usan el formato actualizado con relaciones
+  async createWithRelationships(studentData: CreateStudentRequest): Promise<Student> {
+    if (USE_MOCK) {
+      await delay(500);
+      
+      // Para mock, convertir el formato nuevo al antiguo temporalmente
+      const oldFormatStudent: Omit<Student, 'id' | 'publicId'> = {
+        firstName: studentData.firstName,
+        lastName: studentData.lastName,
+        email: studentData.email,
+        phone: studentData.phone,
+        dateOfBirth: studentData.dateOfBirth,
+        address: studentData.address,
+        isActive: true,
+        tutorIds: studentData.tutors.map(t => t.tutorPublicId),
+        tutors: [], // Se llenará después
+        emergencyContactIds: studentData.emergencyContactsInfo.map(c => c.emergencyContactPublicId),
+        emergencyContacts: [], // Se llenará después
+        createdAt: new Date().toISOString()
+      };
+      
+      const newStudent: Student = {
+        ...oldFormatStudent,
+        id: (mockStudents.length + 1).toString(),
+        publicId: `student-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+      };
+      
+      mockStudents.push(newStudent);
+      console.log('Mock: Created student with relationships:', studentData);
+      return newStudent;
+    }
+    
+    const response = await apiClient.post<Student>('/students', studentData);
+    return response.data;
+  },
+
+  async updateWithRelationships(id: string, studentData: UpdateStudentRequest): Promise<Student> {
+    if (USE_MOCK) {
+      await delay(500);
+      const index = mockStudents.findIndex(s => s.publicId === id);
+      if (index === -1) throw new Error('Estudiante no encontrado');
+      
+      // Para mock, mantener los campos existentes y actualizar solo los nuevos
+      const existingStudent = mockStudents[index];
+      const updatedStudent: Student = {
+        ...existingStudent,
+        firstName: studentData.firstName,
+        lastName: studentData.lastName,
+        email: studentData.email,
+        phone: studentData.phone,
+        dateOfBirth: studentData.dateOfBirth,
+        address: studentData.address,
+        tutorIds: studentData.tutors.map(t => t.tutorPublicId),
+        emergencyContactIds: studentData.emergencyContactsInfo.map(c => c.emergencyContactPublicId),
+      };
+      
+      mockStudents[index] = updatedStudent;
+      console.log('Mock: Updated student with relationships:', studentData);
+      return updatedStudent;
+    }
+    
+    const response = await apiClient.put<Student>(`/api/students/${id}`, studentData);
+    return response.data;
   }
 };

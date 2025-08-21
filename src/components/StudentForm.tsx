@@ -12,9 +12,19 @@ import {
   Alert
 } from '@mui/material';
 import { studentsApi } from '../services/api';
-import type { Student } from '../types';
+import type { Student, StudentTutorRequest, StudentEmergencyContactRequest, CreateStudentRequest } from '../types';
 import { TutorSelector } from './TutorSelector';
 import { EmergencyContactSelector } from './EmergencyContactSelector';
+
+interface SelectedTutorWithRelationship {
+  publicId: string;
+  relationship: string;
+}
+
+interface SelectedContactWithRelationship {
+  publicId: string;
+  relationship: string;
+}
 
 interface StudentFormData {
   firstName: string;
@@ -22,9 +32,11 @@ interface StudentFormData {
   email: string;
   phone: string;
   dateOfBirth: string;
-  tutorIds: string[];
   address: string;
+  tutorIds: string[];
+  tutorsWithRelationships: SelectedTutorWithRelationship[];
   emergencyContactIds: string[];
+  emergencyContactsWithRelationships: SelectedContactWithRelationship[];
 }
 
 interface StudentFormErrors {
@@ -62,8 +74,10 @@ export const StudentForm: React.FC<StudentFormProps> = ({
     phone: '',
     dateOfBirth: '',
     tutorIds: [],
+    tutorsWithRelationships: [],
     address: '',
-    emergencyContactIds: []
+    emergencyContactIds: [],
+    emergencyContactsWithRelationships: []
   });
   const [errors, setErrors] = useState<StudentFormErrors>({});
 
@@ -77,8 +91,10 @@ export const StudentForm: React.FC<StudentFormProps> = ({
         phone: student.phone || '',
         dateOfBirth: student.dateOfBirth,
         tutorIds: student.tutorIds || [],
+        tutorsWithRelationships: [], // TODO: extraer de student.tutors
         address: student.address,
-        emergencyContactIds: student.emergencyContactIds || []
+        emergencyContactIds: student.emergencyContactIds || [],
+        emergencyContactsWithRelationships: [] // TODO: extraer de student.emergencyContacts
       });
     } else {
       setFormData({
@@ -88,8 +104,10 @@ export const StudentForm: React.FC<StudentFormProps> = ({
         phone: '',
         dateOfBirth: '',
         tutorIds: [],
+        tutorsWithRelationships: [],
         address: '',
-        emergencyContactIds: []
+        emergencyContactIds: [],
+        emergencyContactsWithRelationships: []
       });
     }
     setErrors({});
@@ -122,22 +140,34 @@ export const StudentForm: React.FC<StudentFormProps> = ({
 
       console.log('Submitting student data:', formData);
 
-      const studentData: Omit<Student, 'id' | 'publicId'> = {
+      // Construir arrays de objetos con relación usando los nuevos formatos
+      const tutors: StudentTutorRequest[] = formData.tutorsWithRelationships.map(tutor => ({
+        tutorPublicId: tutor.publicId,
+        relationship: tutor.relationship
+      }));
+
+      const emergencyContacts: StudentEmergencyContactRequest[] = formData.emergencyContactsWithRelationships.map(contact => ({
+        emergencyContactPublicId: contact.publicId,
+        relationship: contact.relationship
+      }));
+
+      const studentData: CreateStudentRequest = {
         firstName: formData.firstName,
         lastName: formData.lastName,
         email: formData.email || undefined,
         phone: formData.phone || undefined,
         dateOfBirth: formData.dateOfBirth,
         address: formData.address,
-        isActive: true,
-        tutorIds: formData.tutorIds,
-        emergencyContactIds: formData.emergencyContactIds,
+        tutors,
+        emergencyContactsInfo: emergencyContacts
       };
 
+      console.log('Sending to backend with relationships:', studentData);
+
       if (mode === 'create') {
-        await studentsApi.create(studentData);
+        await studentsApi.createWithRelationships(studentData);
       } else if (mode === 'edit' && student) {
-        await studentsApi.update(student.publicId, studentData);
+        await studentsApi.updateWithRelationships(student.publicId, studentData);
       }
       
       onSuccess?.();
@@ -253,12 +283,16 @@ export const StudentForm: React.FC<StudentFormProps> = ({
           {/* Selector de Tutores */}
           <TutorSelector
             selectedTutorIds={formData.tutorIds}
+            selectedTutorsWithRelationships={formData.tutorsWithRelationships}
             onTutorIdsChange={(tutorIds) => {
               setFormData(prev => ({ ...prev, tutorIds }));
               // Limpiar error cuando se seleccionen tutores
               if (tutorIds.length > 0 && errors.tutorIds) {
                 setErrors(prev => ({ ...prev, tutorIds: undefined }));
               }
+            }}
+            onTutorsWithRelationshipsChange={(tutorsWithRelationships) => {
+              setFormData(prev => ({ ...prev, tutorsWithRelationships }));
             }}
             label="Tutores del Estudiante"
             required={true}
@@ -272,6 +306,7 @@ export const StudentForm: React.FC<StudentFormProps> = ({
           {/* Contactos de Emergencia */}
           <EmergencyContactSelector
             selectedContactIds={formData.emergencyContactIds}
+            selectedContactsWithRelationships={formData.emergencyContactsWithRelationships}
             onContactIdsChange={(contactIds) => {
               setFormData(prev => ({ ...prev, emergencyContactIds: contactIds }));
               
@@ -279,6 +314,9 @@ export const StudentForm: React.FC<StudentFormProps> = ({
               if (contactIds.length > 0 && errors.emergencyContactIds) {
                 setErrors(prev => ({ ...prev, emergencyContactIds: undefined }));
               }
+            }}
+            onContactsWithRelationshipsChange={(emergencyContactsWithRelationships) => {
+              setFormData(prev => ({ ...prev, emergencyContactsWithRelationships }));
             }}
             required={false}
             disabled={mode === 'view'}

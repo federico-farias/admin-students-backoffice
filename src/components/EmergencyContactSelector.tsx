@@ -33,9 +33,16 @@ interface EmergencyContactFormData {
   documentNumber: string;
 }
 
+interface SelectedContactWithRelationship {
+  publicId: string;
+  relationship: string;
+}
+
 interface EmergencyContactSelectorProps {
   selectedContactIds: string[];
+  selectedContactsWithRelationships?: SelectedContactWithRelationship[];
   onContactIdsChange: (contactIds: string[]) => void;
+  onContactsWithRelationshipsChange?: (contacts: SelectedContactWithRelationship[]) => void;
   label?: string;
   required?: boolean;
   disabled?: boolean;
@@ -46,7 +53,9 @@ interface EmergencyContactSelectorProps {
 
 export const EmergencyContactSelector: React.FC<EmergencyContactSelectorProps> = ({
   selectedContactIds,
+  selectedContactsWithRelationships = [],
   onContactIdsChange,
+  onContactsWithRelationshipsChange,
   label = "Contactos de Emergencia",
   required = false,
   disabled = false,
@@ -175,8 +184,16 @@ export const EmergencyContactSelector: React.FC<EmergencyContactSelectorProps> =
     // Actualizar inmediatamente el estado local
     setSelectedContacts(prev => prev.filter(contact => contact.publicId !== contactId));
 
-    // Notificar al componente padre
+    // Notificar al componente padre con los IDs
     onContactIdsChange(newContactIds);
+    
+    // Notificar al componente padre con las relaciones si la función está disponible
+    if (onContactsWithRelationshipsChange) {
+      const newContactsWithRelationships = selectedContactsWithRelationships.filter(
+        contact => contact.publicId !== contactId
+      );
+      onContactsWithRelationshipsChange(newContactsWithRelationships);
+    }
   };
 
   // Abrir dialog para crear nuevo contacto
@@ -223,8 +240,20 @@ export const EmergencyContactSelector: React.FC<EmergencyContactSelectorProps> =
       return [...prev, contactWithRelationship];
     });
     
-    // Notificar al componente padre
+    // Notificar al componente padre con los IDs
     onContactIdsChange(newContactIds);
+    
+    // Notificar al componente padre con las relaciones si la función está disponible
+    if (onContactsWithRelationshipsChange) {
+      const newContactsWithRelationships = [
+        ...selectedContactsWithRelationships,
+        {
+          publicId: selectedContactForRelationship.publicId,
+          relationship: selectedRelationship
+        }
+      ];
+      onContactsWithRelationshipsChange(newContactsWithRelationships);
+    }
     
     // Cerrar diálogo
     setRelationshipDialogOpen(false);
@@ -299,6 +328,18 @@ export const EmergencyContactSelector: React.FC<EmergencyContactSelectorProps> =
       const newContactIds = [...selectedContactIds, newContact.publicId];
       console.log('New contact IDs after creation:', newContactIds);
       onContactIdsChange(newContactIds);
+      
+      // Notificar al componente padre con las relaciones si la función está disponible
+      if (onContactsWithRelationshipsChange) {
+        const newContactsWithRelationships = [
+          ...selectedContactsWithRelationships,
+          {
+            publicId: newContact.publicId,
+            relationship: newContact.relationship
+          }
+        ];
+        onContactsWithRelationshipsChange(newContactsWithRelationships);
+      }
       
       handleCloseCreateDialog();
     } catch (err) {

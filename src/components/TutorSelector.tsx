@@ -33,9 +33,16 @@ interface TutorFormData {
   documentNumber: string;
 }
 
+interface SelectedTutorWithRelationship {
+  publicId: string;
+  relationship: string;
+}
+
 interface TutorSelectorProps {
   selectedTutorIds: string[];
+  selectedTutorsWithRelationships?: SelectedTutorWithRelationship[];
   onTutorIdsChange: (tutorIds: string[]) => void;
+  onTutorsWithRelationshipsChange?: (tutors: SelectedTutorWithRelationship[]) => void;
   label?: string;
   required?: boolean;
   disabled?: boolean;
@@ -45,7 +52,9 @@ interface TutorSelectorProps {
 
 export const TutorSelector: React.FC<TutorSelectorProps> = ({
   selectedTutorIds,
+  selectedTutorsWithRelationships = [],
   onTutorIdsChange,
+  onTutorsWithRelationshipsChange,
   label = "Tutores",
   required = false,
   disabled = false,
@@ -167,8 +176,16 @@ export const TutorSelector: React.FC<TutorSelectorProps> = ({
     // Actualizar inmediatamente el estado local
     setSelectedTutors(prev => prev.filter(tutor => tutor.publicId !== tutorId));
 
-    // Notificar al componente padre
+    // Notificar al componente padre con los IDs
     onTutorIdsChange(newTutorIds);
+    
+    // Notificar al componente padre con las relaciones si la función está disponible
+    if (onTutorsWithRelationshipsChange) {
+      const newTutorsWithRelationships = selectedTutorsWithRelationships.filter(
+        tutor => tutor.publicId !== tutorId
+      );
+      onTutorsWithRelationshipsChange(newTutorsWithRelationships);
+    }
   };
 
   // Abrir dialog para crear nuevo tutor
@@ -215,8 +232,20 @@ export const TutorSelector: React.FC<TutorSelectorProps> = ({
       return [...prev, tutorWithRelationship];
     });
     
-    // Notificar al componente padre
+    // Notificar al componente padre con los IDs
     onTutorIdsChange(newTutorIds);
+    
+    // Notificar al componente padre con las relaciones si la función está disponible
+    if (onTutorsWithRelationshipsChange) {
+      const newTutorsWithRelationships = [
+        ...selectedTutorsWithRelationships,
+        {
+          publicId: selectedTutorForRelationship.publicId,
+          relationship: selectedRelationship
+        }
+      ];
+      onTutorsWithRelationshipsChange(newTutorsWithRelationships);
+    }
     
     // Cerrar diálogo
     setRelationshipDialogOpen(false);
@@ -285,6 +314,18 @@ export const TutorSelector: React.FC<TutorSelectorProps> = ({
       const newTutorIds = [...selectedTutorIds, newTutor.publicId];
       console.log('New tutor IDs after creation:', newTutorIds);
       onTutorIdsChange(newTutorIds);
+      
+      // Notificar al componente padre con las relaciones si la función está disponible
+      if (onTutorsWithRelationshipsChange) {
+        const newTutorsWithRelationships = [
+          ...selectedTutorsWithRelationships,
+          {
+            publicId: newTutor.publicId,
+            relationship: newTutor.relationship
+          }
+        ];
+        onTutorsWithRelationshipsChange(newTutorsWithRelationships);
+      }
       
       handleCloseCreateDialog();
     } catch (err) {
