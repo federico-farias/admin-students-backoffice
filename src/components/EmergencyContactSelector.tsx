@@ -62,6 +62,11 @@ export const EmergencyContactSelector: React.FC<EmergencyContactSelectorProps> =
   const [createLoading, setCreateLoading] = useState(false);
   const [createError, setCreateError] = useState<string>('');
   
+  // Estados para el diálogo de parentesco
+  const [relationshipDialogOpen, setRelationshipDialogOpen] = useState(false);
+  const [selectedContactForRelationship, setSelectedContactForRelationship] = useState<EmergencyContact | null>(null);
+  const [selectedRelationship, setSelectedRelationship] = useState<string>('');
+  
   const [formData, setFormData] = useState<EmergencyContactFormData>({
     firstName: '',
     lastName: '',
@@ -155,20 +160,10 @@ export const EmergencyContactSelector: React.FC<EmergencyContactSelectorProps> =
       return;
     }
     
-    const newContactIds = [...selectedContactIds, contact.publicId];
-    
-    // Actualizar inmediatamente el estado local
-    setSelectedContacts(prev => {
-      // Verificar que no esté ya en la lista local
-      if (prev.find(c => c.publicId === contact.publicId)) {
-        console.log('Contact already in local state, not adding again');
-        return prev;
-      }
-      return [...prev, contact];
-    });
-    
-    // Notificar al componente padre
-    onContactIdsChange(newContactIds);
+    // Abrir diálogo para seleccionar parentesco
+    setSelectedContactForRelationship(contact);
+    setSelectedRelationship('');
+    setRelationshipDialogOpen(true);
     setSearchText('');
     setSearchResults([]);
   };
@@ -204,6 +199,44 @@ export const EmergencyContactSelector: React.FC<EmergencyContactSelectorProps> =
   const handleCloseCreateDialog = () => {
     setCreateDialogOpen(false);
     setCreateError('');
+  };
+
+  // Manejar confirmación de parentesco
+  const handleConfirmRelationship = () => {
+    if (!selectedContactForRelationship || !selectedRelationship) return;
+    
+    // Crear el contacto con el parentesco seleccionado
+    const contactWithRelationship = {
+      ...selectedContactForRelationship,
+      relationship: selectedRelationship
+    };
+    
+    const newContactIds = [...selectedContactIds, selectedContactForRelationship.publicId];
+    
+    // Actualizar inmediatamente el estado local
+    setSelectedContacts(prev => {
+      // Verificar que no esté ya en la lista local
+      if (prev.find(c => c.publicId === selectedContactForRelationship.publicId)) {
+        console.log('Contact already in local state, not adding again');
+        return prev;
+      }
+      return [...prev, contactWithRelationship];
+    });
+    
+    // Notificar al componente padre
+    onContactIdsChange(newContactIds);
+    
+    // Cerrar diálogo
+    setRelationshipDialogOpen(false);
+    setSelectedContactForRelationship(null);
+    setSelectedRelationship('');
+  };
+
+  // Cerrar diálogo de parentesco
+  const handleCloseRelationshipDialog = () => {
+    setRelationshipDialogOpen(false);
+    setSelectedContactForRelationship(null);
+    setSelectedRelationship('');
   };
 
   // Validar formulario de nuevo contacto
@@ -519,6 +552,55 @@ export const EmergencyContactSelector: React.FC<EmergencyContactSelectorProps> =
             disabled={createLoading}
           >
             {createLoading ? 'Creando...' : 'Crear Contacto'}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Dialog para seleccionar parentesco */}
+      <Dialog
+        open={relationshipDialogOpen}
+        onClose={handleCloseRelationshipDialog}
+        maxWidth="sm"
+        fullWidth
+      >
+        <DialogTitle>Seleccionar Relación</DialogTitle>
+        <DialogContent>
+          <Typography variant="body1" gutterBottom sx={{ mt: 2 }}>
+            Especifica la relación de <strong>{selectedContactForRelationship?.firstName} {selectedContactForRelationship?.lastName}</strong> con el estudiante:
+          </Typography>
+          
+          <FormControl fullWidth sx={{ mt: 2 }}>
+            <InputLabel>Relación</InputLabel>
+            <Select
+              value={selectedRelationship}
+              label="Relación"
+              onChange={(e) => setSelectedRelationship(e.target.value)}
+            >
+              <MenuItem value="Familiar">Familiar</MenuItem>
+              <MenuItem value="Padre">Padre</MenuItem>
+              <MenuItem value="Madre">Madre</MenuItem>
+              <MenuItem value="Abuelo">Abuelo</MenuItem>
+              <MenuItem value="Abuela">Abuela</MenuItem>
+              <MenuItem value="Tío">Tío</MenuItem>
+              <MenuItem value="Tía">Tía</MenuItem>
+              <MenuItem value="Hermano">Hermano</MenuItem>
+              <MenuItem value="Hermana">Hermana</MenuItem>
+              <MenuItem value="Vecino">Vecino</MenuItem>
+              <MenuItem value="Amigo de la Familia">Amigo de la Familia</MenuItem>
+              <MenuItem value="Otro">Otro</MenuItem>
+            </Select>
+          </FormControl>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseRelationshipDialog}>
+            Cancelar
+          </Button>
+          <Button 
+            onClick={handleConfirmRelationship} 
+            variant="contained"
+            disabled={!selectedRelationship}
+          >
+            Confirmar
           </Button>
         </DialogActions>
       </Dialog>

@@ -60,6 +60,11 @@ export const TutorSelector: React.FC<TutorSelectorProps> = ({
   const [createLoading, setCreateLoading] = useState(false);
   const [createError, setCreateError] = useState<string>('');
   
+  // Estados para el diálogo de parentesco
+  const [relationshipDialogOpen, setRelationshipDialogOpen] = useState(false);
+  const [selectedTutorForRelationship, setSelectedTutorForRelationship] = useState<Tutor | null>(null);
+  const [selectedRelationship, setSelectedRelationship] = useState<string>('');
+  
   const [formData, setFormData] = useState<TutorFormData>({
     firstName: '',
     lastName: '',
@@ -147,20 +152,10 @@ export const TutorSelector: React.FC<TutorSelectorProps> = ({
       return;
     }
     
-    const newTutorIds = [...selectedTutorIds, tutor.publicId];
-    
-    // Actualizar inmediatamente el estado local
-    setSelectedTutors(prev => {
-      // Verificar que no esté ya en la lista local
-      if (prev.find(t => t.publicId === tutor.publicId)) {
-        console.log('Tutor already in local state, not adding again');
-        return prev;
-      }
-      return [...prev, tutor];
-    });
-    
-    // Notificar al componente padre
-    onTutorIdsChange(newTutorIds);
+    // Abrir diálogo para seleccionar parentesco
+    setSelectedTutorForRelationship(tutor);
+    setSelectedRelationship('');
+    setRelationshipDialogOpen(true);
     setSearchText('');
     setSearchResults([]);
   };
@@ -196,6 +191,44 @@ export const TutorSelector: React.FC<TutorSelectorProps> = ({
   const handleCloseCreateDialog = () => {
     setCreateDialogOpen(false);
     setCreateError('');
+  };
+
+  // Manejar confirmación de parentesco
+  const handleConfirmRelationship = () => {
+    if (!selectedTutorForRelationship || !selectedRelationship) return;
+    
+    // Crear el tutor con el parentesco seleccionado
+    const tutorWithRelationship = {
+      ...selectedTutorForRelationship,
+      relationship: selectedRelationship
+    };
+    
+    const newTutorIds = [...selectedTutorIds, selectedTutorForRelationship.publicId];
+    
+    // Actualizar inmediatamente el estado local
+    setSelectedTutors(prev => {
+      // Verificar que no esté ya en la lista local
+      if (prev.find(t => t.publicId === selectedTutorForRelationship.publicId)) {
+        console.log('Tutor already in local state, not adding again');
+        return prev;
+      }
+      return [...prev, tutorWithRelationship];
+    });
+    
+    // Notificar al componente padre
+    onTutorIdsChange(newTutorIds);
+    
+    // Cerrar diálogo
+    setRelationshipDialogOpen(false);
+    setSelectedTutorForRelationship(null);
+    setSelectedRelationship('');
+  };
+
+  // Cerrar diálogo de parentesco
+  const handleCloseRelationshipDialog = () => {
+    setRelationshipDialogOpen(false);
+    setSelectedTutorForRelationship(null);
+    setSelectedRelationship('');
   };
 
   // Validar formulario de nuevo tutor
@@ -499,6 +532,53 @@ export const TutorSelector: React.FC<TutorSelectorProps> = ({
             disabled={createLoading}
           >
             {createLoading ? 'Creando...' : 'Crear Tutor'}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Dialog para seleccionar parentesco */}
+      <Dialog
+        open={relationshipDialogOpen}
+        onClose={handleCloseRelationshipDialog}
+        maxWidth="sm"
+        fullWidth
+      >
+        <DialogTitle>Seleccionar Parentesco</DialogTitle>
+        <DialogContent>
+          <Typography variant="body1" gutterBottom sx={{ mt: 2 }}>
+            Especifica el parentesco de <strong>{selectedTutorForRelationship?.firstName} {selectedTutorForRelationship?.lastName}</strong> con el estudiante:
+          </Typography>
+          
+          <FormControl fullWidth sx={{ mt: 2 }}>
+            <InputLabel>Parentesco</InputLabel>
+            <Select
+              value={selectedRelationship}
+              label="Parentesco"
+              onChange={(e) => setSelectedRelationship(e.target.value)}
+            >
+              <MenuItem value="Padre">Padre</MenuItem>
+              <MenuItem value="Madre">Madre</MenuItem>
+              <MenuItem value="Abuelo">Abuelo</MenuItem>
+              <MenuItem value="Abuela">Abuela</MenuItem>
+              <MenuItem value="Tío">Tío</MenuItem>
+              <MenuItem value="Tía">Tía</MenuItem>
+              <MenuItem value="Hermano">Hermano</MenuItem>
+              <MenuItem value="Hermana">Hermana</MenuItem>
+              <MenuItem value="Tutor Legal">Tutor Legal</MenuItem>
+              <MenuItem value="Otro">Otro</MenuItem>
+            </Select>
+          </FormControl>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseRelationshipDialog}>
+            Cancelar
+          </Button>
+          <Button 
+            onClick={handleConfirmRelationship} 
+            variant="contained"
+            disabled={!selectedRelationship}
+          >
+            Confirmar
           </Button>
         </DialogActions>
       </Dialog>
