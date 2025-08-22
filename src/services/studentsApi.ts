@@ -306,9 +306,9 @@ export const studentsApi = {
         dateOfBirth: studentData.dateOfBirth,
         address: studentData.address,
         isActive: true,
-        tutorIds: studentData.tutors.map(t => t.tutorPublicId),
+        tutorIds: studentData.tutorsInfo.map(t => t.publicId),
         tutors: [], // Se llenará después
-        emergencyContactIds: studentData.emergencyContactsInfo.map(c => c.emergencyContactPublicId),
+        emergencyContactIds: studentData.emergencyContactsInfo.map(c => c.publicId),
         emergencyContacts: [], // Se llenará después
         createdAt: new Date().toISOString()
       };
@@ -344,8 +344,8 @@ export const studentsApi = {
         phone: studentData.phone,
         dateOfBirth: studentData.dateOfBirth,
         address: studentData.address,
-        tutorIds: studentData.tutors.map(t => t.tutorPublicId),
-        emergencyContactIds: studentData.emergencyContactsInfo.map(c => c.emergencyContactPublicId),
+        tutorIds: studentData.tutorsInfo.map(t => t.publicId),
+        emergencyContactIds: studentData.emergencyContactsInfo.map(c => c.publicId),
       };
       
       mockStudents[index] = updatedStudent;

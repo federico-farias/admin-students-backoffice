@@ -142,12 +142,12 @@ export const StudentForm: React.FC<StudentFormProps> = ({
 
       // Construir arrays de objetos con relación usando los nuevos formatos
       const tutors: StudentTutorRequest[] = formData.tutorsWithRelationships.map(tutor => ({
-        tutorPublicId: tutor.publicId,
+        publicId: tutor.publicId,
         relationship: tutor.relationship
       }));
 
       const emergencyContacts: StudentEmergencyContactRequest[] = formData.emergencyContactsWithRelationships.map(contact => ({
-        emergencyContactPublicId: contact.publicId,
+        publicId: contact.publicId,
         relationship: contact.relationship
       }));
 
@@ -158,7 +158,7 @@ export const StudentForm: React.FC<StudentFormProps> = ({
         phone: formData.phone || undefined,
         dateOfBirth: formData.dateOfBirth,
         address: formData.address,
-        tutors,
+        tutorsInfo: tutors,
         emergencyContactsInfo: emergencyContacts
       };
 

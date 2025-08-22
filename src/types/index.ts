@@ -145,12 +145,12 @@ export interface EmergencyContact {
 
 // DTOs para requests al backend
 export interface StudentTutorRequest {
-  tutorPublicId: string;
+  publicId: string;
   relationship: string;
 }
 
 export interface StudentEmergencyContactRequest {
-  emergencyContactPublicId: string;
+  publicId: string;
   relationship: string;
 }
 
@@ -161,7 +161,7 @@ export interface CreateStudentRequest {
   phone?: string;
   dateOfBirth: string;
   address: string;
-  tutors: StudentTutorRequest[];
+  tutorsInfo: StudentTutorRequest[];
   emergencyContactsInfo: StudentEmergencyContactRequest[];
 }
 
